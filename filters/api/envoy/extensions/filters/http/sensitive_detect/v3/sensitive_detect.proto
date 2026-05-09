@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package envoy.extensions.filters.http.sensitive_detect.v3;
+
+import "udpa/annotations/status.proto";
+
+import "google/protobuf/empty.proto";
+
+option java_package = "io.envoyproxy.envoy.extensions.filters.http.sensitive_detect.v3";
+option java_outer_classname = "SensitiveDetectProto";
+option java_multiple_files = true;
+option go_package = "git.ouryun.cn/base/envoy-go-proto/filters/api/envoy/extensions/filters/http/sensitive_detect/v3;sensitive_detectv3";
+option (udpa.annotations.file_status).package_version_status = ACTIVE;
+
+message Rule {
+ uint32 id = 1;
+ string pattern = 2;
+}
+
+// 全局配置
+message SensitiveDetectGlobal {
+  bool enable = 1;
+  repeated Rule rules = 2;
+}
+
+// 路由配置
+message SensitiveDetectPerRoute {
+  google.protobuf.Empty google_default = 1;
+}

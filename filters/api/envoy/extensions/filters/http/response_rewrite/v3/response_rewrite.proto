@@ -1,0 +1,140 @@
+syntax = "proto3";
+
+package envoy.extensions.filters.http.response_rewrite.v3;
+
+import "filters/api/envoy/extensions/filters/http/common/strong_matcher/v3/matcher.proto";
+import "filters/api/envoy/extensions/filters/http/common/ip_whitelist/v3/ip_whitelist.proto";
+import "filters/api/envoy/extensions/filters/http/common/algorithm/v3/algorithm.proto";
+
+import "udpa/annotations/status.proto";
+import "validate/validate.proto";
+import "envoy/config/core/v3/extension.proto";
+
+option java_package = "io.envoyproxy.envoy.extensions.filters.http.response_rewrite.v3";
+option java_outer_classname = "ResponseRewriteProto";
+option java_multiple_files = true;
+option go_package = "git.ouryun.cn/base/envoy-go-proto/filters/api/envoy/extensions/filters/http/response_rewrite/v3;response_rewritev3";
+option (udpa.annotations.file_status).package_version_status = ACTIVE;
+
+// 全局配置
+message ResponseRewriteGlobal {
+  config.core.v3.TypedExtensionConfig decompressor_library_gzip = 1
+  [(validate.rules).message = {required: true}];
+  config.core.v3.TypedExtensionConfig decompressor_library_brotli = 2
+  [(validate.rules).message = {required: true}];
+  config.core.v3.TypedExtensionConfig compressor_library_gzip = 3
+  [(validate.rules).message = {required: true}];
+  config.core.v3.TypedExtensionConfig compressor_library_brotli = 4
+  [(validate.rules).message = {required: true}];
+}
+
+message RewriteRule {
+  // 敏感类型
+  string Sensitive_type = 1;
+  // 脱敏方式
+  oneof rewrite_method {
+    // 遮盖
+    extensions.filters.http.common.algorithm.v3.CoverRewrite cover_rewrite = 2;
+    // 替换
+    extensions.filters.http.common.algorithm.v3.ReplaceRewrite replace_rewrite = 3;
+    // 变换
+    extensions.filters.http.common.algorithm.v3.TransformRewrite transform_rewrite = 4;
+    // 洗牌
+    extensions.filters.http.common.algorithm.v3.ShuffleRewrite shuffle_rewrite = 5;
+    // 哈希加密
+    extensions.filters.http.common.algorithm.v3.HashEncryptRewrite hash_encrypt_rewrite = 6;
+    // 加密算法
+    extensions.filters.http.common.algorithm.v3.EncryptAlgorithmRewrite encrypt_algorithm_rewrite = 7;
+  }
+  //唯一脱敏id
+  string unique_rewrite_id = 8;
+}
+
+message IdentifyRule {
+  enum IdentifyType {
+    IDENTIFY_UNKNOWN = 0;
+    DATA_CONTENT = 1;
+    FIELD_NAME = 2;
+    DATA_CONTENT_AND_FIELD_NAME = 3;
+  }
+
+  enum RecognitionLogic {
+    RECOGNITION_UNKNOWN = 0;
+    SATISFY_ALL = 1;
+    SATISFY_ANY = 2;
+  }
+  // 敏感类型名称
+  string sensitive_type = 1;
+  // 识别方式
+  IdentifyType identify_type = 2;
+  // 识别逻辑
+  RecognitionLogic recognition_logic = 3;
+  // 字段名称
+  string field_name = 4;
+  // 数据内容
+  string data_content = 5;
+  // 唯一识别id
+  string unique_identify_id = 6;
+}
+
+
+
+message Rule {
+  // 优先级
+  uint32 id = 1;
+  // 匹配条件
+  repeated extensions.filters.http.common.strong_matcher.v3.Matcher match = 2;
+  // 识别规则
+  IdentifyRule identify_rule = 3;
+  // 脱敏规则
+  RewriteRule rewrite_rule = 4;
+  // 状态
+  bool enable = 5;
+  // 脱敏策略名称
+  string rewrite_strategy_name = 6;
+}
+
+message IpWhitelist {
+  // ip白名单
+  repeated envoy.extensions.filters.http.common.ip_whitelist.v3.IpWhitelist ip_whitelist = 1 [(validate.rules).repeated = {max_items: 256}];
+  // 敏感类型
+  string sensitive_type = 2;
+  // 状态 true:启用 false:禁用
+  bool enable = 3;
+  // 敏感类型为全部时
+  bool sensitive_type_all = 4;
+}
+
+message UserWhitelist {
+  // user白名单
+  repeated extensions.filters.http.common.strong_matcher.v3.UserMatcher user = 1;
+  // 敏感类型
+  string sensitive_type = 2;
+  // 状态 true:启用 false:禁用
+  bool enable = 3;
+  // 敏感类型为全部时
+  bool sensitive_type_all = 4;
+}
+
+message Whitelist {
+  // ip 白名单
+  repeated IpWhitelist ip_whitelist = 1;
+  // 用户名白名单
+  repeated UserWhitelist user_whitelist = 2;
+}
+
+// 路由配置
+message ResponseRewritePerRoute {
+
+  bool enable = 1;
+  // 状态码匹配
+  repeated uint32 status_codes = 2 [(validate.rules).repeated = {max_items: 32}];
+  // 规则
+  repeated Rule rules = 3 [(validate.rules).repeated = {max_items: 512}];
+  // 白名单
+  Whitelist whitelist = 4;
+  // 是否压缩数据
+  bool compressor_enable = 5;
+  // 缓冲区大小
+  uint32 buffer = 6;
+}

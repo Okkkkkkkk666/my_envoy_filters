@@ -7,7 +7,6 @@ external/
 tools/
 third_party/
 third-party/
-envoy/
 Tongsuo/
 patches/
 docs/

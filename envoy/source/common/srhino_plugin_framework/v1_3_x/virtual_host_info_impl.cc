@@ -1,0 +1,57 @@
+#include "source/common/srhino_plugin_framework/v1_3_x/virtual_host_info_impl.h"
+#include "source/common/common/empty_string.h"
+
+namespace SrhinoPluginFramework {
+namespace v1_3_x {
+VirtualHostInfoImpl::VirtualHostInfoImpl(
+    const std::string& filter_name, Envoy::Http::StreamFilterCallbacks* callbacks,
+    const Envoy::Server::Configuration::FactoryContext& factory_context)
+    : filter_name_(filter_name), callbacks_(callbacks), factory_context_(factory_context) {
+  initVirtualHostImpl();
+}
+
+const std::string& VirtualHostInfoImpl::name() const {
+  if (name_.empty() && virtual_host_impl_) {
+    const_cast<std::string&>(name_) =
+        factory_context_.getServerFactoryContext().scope().symbolTable().toString(
+            virtual_host_impl_->statName());
+  }
+
+  return name_;
+}
+
+void* VirtualHostInfoImpl::config() const {
+  if (!virtual_host_impl_) {
+    return nullptr;
+  }
+  auto envoy_config = virtual_host_impl_->perFilterConfig(filter_name_);
+  if (!envoy_config) {
+    return nullptr;
+  }
+  auto srhino_per_route_config =
+      dynamic_cast<const Envoy::Router::SrhinoRouteSpecificFilterConfig*>(envoy_config);
+  if (!srhino_per_route_config) {
+    return nullptr;
+  }
+  return srhino_per_route_config->runtimeConfig();
+}
+
+void VirtualHostInfoImpl::initVirtualHostImpl() {
+  auto route = callbacks_->route();
+  if (route) {
+    auto entry = route->routeEntry();
+    if (entry) {
+      auto& vh = entry->virtualHost();
+      virtual_host_impl_ = dynamic_cast<const Envoy::Router::VirtualHostImpl*>(&vh);
+    } else {
+      auto route_impl = std::dynamic_pointer_cast<const Envoy::Router::RouteEntryImplBase>(route);
+      if (route_impl && route_impl->isDirectResponse()) {
+        const Envoy::Router::VirtualHost& vh = route_impl->virtualHost();
+        virtual_host_impl_ = dynamic_cast<const Envoy::Router::VirtualHostImpl*>(&vh);
+      }
+    }
+  }
+}
+
+} // namespace v1_3_x
+} // namespace SrhinoPluginFramework

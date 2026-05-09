@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package envoy.extensions.filters.http.user_identify.v3;
+
+import "udpa/annotations/status.proto";
+
+option java_package = "io.envoyproxy.envoy.extensions.filters.http.user_identify.v3";
+option java_outer_classname = "UserIdentifyProto";
+option java_multiple_files = true;
+option go_package = "github.com/ouryun/envoy/filters/api/envoy/extensions/filters/http/user_identify/v3;user_identifyv3";
+option (udpa.annotations.file_status).package_version_status = ACTIVE;
+
+message ResultInfo {
+  // 用户名
+  string user = 1;
+  // token
+  string token = 2;
+  //源IP
+  string src_ip=3;
+}
+
+message UserIdentifyLog {
+  // 检测结果
+  repeated ResultInfo result_info = 1;
+}

@@ -1,0 +1,120 @@
+syntax = "proto3";
+
+package ata.v1;
+
+message FullAccessLog {
+  string request_id = 1;
+  ConnectionInfo connection_info = 2;
+  Request request = 3;
+  Response response = 4;
+  // 对于石犀流量引擎而言，是引擎SN和节点SN的拼接（引擎SN.节点SN）；对于石犀镜像引擎而言，只有引擎SN
+  string node_id = 5;
+  // 流量引擎账号识别信息，适用于流量引擎
+  UserInfo user_info = 6;
+  // 引擎类型
+  EngineType engine_type = 7;
+  // 是否有插件命中
+  bool plugin_hit = 8;
+  // 插件可视化日志
+  DynamicMetadataFilterLog filter_log = 9;
+}
+
+
+// 插件实例信息
+message InstanceInfo {
+  // 插件实例名称
+  string name = 1;
+  // 插件日志
+  bytes log = 2;
+}
+
+message DynamicMetadataFilterLog {
+  // 路由名称
+  string gateway_name = 1;
+  // 虚拟主机名称
+  string virtual_host_name = 2;
+  // 集群名称
+  string cluster_name = 3;
+  // 插件实例信息
+  repeated InstanceInfo instance_info = 4;
+}
+
+message ConnectionInfo {
+  // 客户端，IPv4:Port，适用于 Mirror 引擎，对于流量引擎 Envoy 表示下游客户端
+  string downstream_remote_address = 1;
+  string downstream_local_address = 2;
+  string downstream_direct_remote_address = 3;
+  // 服务端，IPv4:Port，适用于 Mirror 引擎，对于流量引擎 Envoy 表示上游服务地址
+  string upstream_host = 4;
+  string upstream_local_address = 5;
+  string virtual_cluster_name = 6;
+  string route_name = 7;
+  string upstream_cluster = 8;
+  bytes dynamic_metadata_filter = 9;
+  // 请求开始时间，单位毫秒
+  int64 start_time = 10;
+  int64 duration = 11;
+  int64 request_duration = 12;
+  int64 request_tx_duration = 13;
+  int64 response_duration = 14;
+  int64 response_tx_duration = 15;
+  // 对应请求大小
+  int64 bytes_received = 16;
+  // 对应响应大小
+  int64 bytes_sent = 17;
+  string listener_stat_prefix = 18;
+  // 原始的主机头
+  string origin_host = 19;
+  // 上一跳mac地址，目前仅在镜像引擎有效
+  string origin_mac_address = 20;
+  // 客户端浏览器指纹，目前仅在流量引擎有效
+  string client_device_fingerprint = 21;
+  // 当前连接的协议，目前可为：http/https/dubbo
+  string scheme = 22;
+  string response_code_details = 23;
+  int64 response_trailers_bytes = 24;
+}
+
+// 请求
+message Request {
+  // 请求行
+  string raw_start_line = 1;
+  // 请求头
+  string raw_headers = 2;
+  // 请求体
+  repeated bytes raw_body = 3;
+}
+
+// 响应
+message Response {
+  // 响应行
+  string raw_start_line = 1;
+  // 响应头
+  string raw_headers = 2;
+  // 响应头
+  repeated bytes raw_body = 3;
+}
+
+// 账号识别信息
+message UserInfo {
+  // 用户唯一ID
+  string unique_id = 1;
+  // 账号名
+  string name = 2;
+  // 应用ID
+  string app_id = 3;
+  // 规则ID
+  string rule_id = 4;
+}
+
+// 引擎类型
+enum EngineType {
+  // 流量引擎
+  TARFFIC = 0;
+  // 镜像引擎
+  MIRROR = 1;
+  // 边车引擎
+  SIDECAR = 2;
+  // 数据库
+  DATABASE = 3;
+}

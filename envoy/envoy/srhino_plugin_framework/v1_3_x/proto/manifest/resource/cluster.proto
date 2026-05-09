@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package srhino_plugin_framework.v1_3_x.proto.manifest.resource;
+
+import "validate/validate.proto";
+
+// 集群资源
+message Cluster {
+  // 负载均衡类型
+  enum LoadBlance {
+    // 轮询
+    ROUND_ROBIN = 0;
+    // 随机
+    RANDOM = 1;
+    // 源IP一致性哈希
+    SOURCE_IP_HASH = 2;
+  }
+
+  // 节点地址信息
+  message Endpoint {
+    string address = 1 [(validate.rules).string = {address: true}];
+    int32 port = 2;
+  }
+
+  // 健康检查方式
+  message HealthCheck {
+    // TCP健康检查
+    // TCP三次握手成功则认为健康，集群指定了sni，则TLS握手成功则认为健康
+    message Tcp {
+    }
+
+    // HTTP健康检查
+    message Http {
+      // 健康检查期间将要访问的HTTP路径
+      string path = 1 [(validate.rules).string = {uri: true}];
+      // 被认为健康的HTTP响应状态码列表，如200、404等。如果不指定则默认只有200被认为健康
+      repeated int32 expected_statuses = 2;
+    }
+
+    oneof type {
+      Tcp tcp = 1;
+      Http http = 2;
+    }
+  }
+
+  enum HttpProtocolOptions {
+    HTTP1 = 0;
+    HTTP2 = 1;
+  }
+
+  // 负载均衡类型，如果不指定则默认为轮询
+  LoadBlance load_blance = 1;
+  // 节点地址信息列表，至少需要指定一个节点
+  repeated Endpoint endpoints = 2 [(validate.rules).repeated = {min_items: 1}];
+  // 健康检查，如果不指定则不启用健康检查，且集群永远被认为健康
+  HealthCheck health_check = 3;
+  // 指定HTTPS使用的sni，如果未指定则使用HTTP
+  string sni = 4;
+  // 指定http协议类型，如果不指定则默认为HTTP1
+  HttpProtocolOptions protocol_options = 5;
+}

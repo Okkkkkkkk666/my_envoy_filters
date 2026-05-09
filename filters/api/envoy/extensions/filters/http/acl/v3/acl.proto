@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package envoy.extensions.filters.http.acl.v3;
+
+import "envoy/config/core/v3/address.proto";
+import "filters/api/envoy/extensions/filters/http/common/strong_matcher/v3/matcher.proto";
+import "udpa/annotations/status.proto";
+
+option java_package = "io.envoyproxy.envoy.extensions.filters.http.acl.v3";
+option java_outer_classname = "AclProto";
+option java_multiple_files = true;
+option go_package = "git.ouryun.cn/base/envoy-go-proto/filters/api/envoy/extensions/filters/http/acl/v3;aclv3";
+option (udpa.annotations.file_status).package_version_status = ACTIVE;
+
+// [#protodoc-title: Acl]
+// Acl :ref:`configuration overview <config_http_filters_acl>`.
+// [#extension: envoy.filters.http.acl]
+message Acl {
+}
+
+enum Action {
+  ALLOW = 0;
+  DENY = 1;
+  RECORD = 2;
+}
+
+message Rule {
+  oneof from {
+    config.core.v3.CidrRange src_ip = 1;
+    extensions.filters.http.common.strong_matcher.v3.IpSet ip_list = 2;
+  }
+
+  // IP条件是否取反
+  bool ip_invert = 3 [deprecated = true];
+
+  repeated extensions.filters.http.common.strong_matcher.v3.Matcher match = 4;
+
+  Action act = 5;
+
+  string upstream = 6;
+
+  uint32 id = 7;
+
+  bool enable = 8;
+
+  string deny_context = 9;
+  //规则名称
+  string rule_name = 10;
+  //类型
+  string type = 11;
+}
+
+message AclPerRoute {
+  Action default_act = 2 [deprecated = true];
+  repeated Rule rules = 3;
+  string deny_context = 4 [deprecated = true];
+  bool enable = 5;
+}

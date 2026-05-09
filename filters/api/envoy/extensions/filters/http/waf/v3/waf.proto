@@ -1,0 +1,245 @@
+syntax = "proto3";
+
+package envoy.extensions.filters.http.waf.v3;
+
+import "envoy/config/core/v3/http_uri.proto";
+
+import "udpa/annotations/status.proto";
+import "validate/validate.proto";
+
+import "filters/api/envoy/extensions/filters/http/common/ip_whitelist/v3/ip_whitelist.proto";
+import "filters/api/envoy/extensions/filters/http/strong_global_ratelimit/v3/strong_global_ratelimit.proto";
+import "envoy/config/core/v3/grpc_service.proto";
+
+
+option java_package = "io.envoyproxy.envoy.extensions.filters.http.waf.v3";
+option java_outer_classname = "WafProto";
+option java_multiple_files = true;
+option go_package = "git.ouryun.cn/base/envoy-go-proto/filters/api/envoy/extensions/filters/http/waf/v3;wafv3";
+option (udpa.annotations.file_status).package_version_status = ACTIVE;
+
+message WafGlobal {
+  enum RuleType {
+    RT_Placeholder = 0x0000000000000000;         // 无意义，占位而已
+    RT_ScannerDetection = 0x0000000000000001;    // 扫描检测
+    RT_ProtocolEnforcement = 0x0000000000000002; // 防范协议和编码问题
+    RT_ProtocolAttack = 0x0000000000000004;      // 防范标头注入、请求走私和响应拆分
+    RT_MultipartAttack = 0x0000000000000008;     // 防范表单攻击
+    RT_ApplicationAttackLfi = 0x0000000000000010;     // 防范文件和路径攻击
+    RT_ApplicationAttackRfi = 0x0000000000000020;     // 防范远程文件包含 (rfi) 攻击
+    RT_ApplicationAttackRce = 0x0000000000000040;     // 防范远程代码执行攻击
+    RT_ApplicationAttackPhp = 0x0000000000000080;     // 防范 php 注入攻击
+    RT_ApplicationAttackGeneric = 0x0000000000000100; // 防范通用应用程序攻击
+    RT_ApplicationAttackXss = 0x0000000000000200;     // 防范跨站点脚本攻击
+    RT_ApplicationAttackSqli = 0x0000000000000400;    // 防范 sql 注入攻击
+    RT_ApplicationAttackSessionFixation = 0x0000000000000800; // 防范会话固定攻击
+    RT_ApplicationAttackJava = 0x0000000000001000;            // 防范 java 攻击
+    RT_BlockingEvaluation = 0x0000000000002000; // 用于插入请求阈值检测，保留项
+    RT_DataLeakages = 0x0000000000004000;       // 防范 响应数据泄露
+    RT_DataLeakagesSql = 0x0000000000008000;    // 防范 响应sql数据泄露
+    RT_DataLeakagesJava = 0x0000000000010000;   // 防范 响应java数据泄露
+    RT_DataLeakagesPhp = 0x0000000000020000;    // 防范 响应php数据泄露
+    RT_DataLeakagesIis = 0x0000000000040000;    // 防范 响应iis数据泄露
+    RT_WebShells = 0x0000000000080000;          // 拦截响应web shell
+    RT_APILEAK = 0x0000000000100000;            // 调试页面泄露
+    RT_BACKUPLEAK = 0x0000000000200000;         // 备份文件泄露
+    RT_CONFIGLEAK = 0x0000000000400000;         // 核心配置文件泄露
+    RT_FILELEAK = 0x0000000000800000;           // 属性配置文件泄露
+    RT_LOGLEAK = 0x0000000001000000;            // 日志信息泄露
+    RT_PANELLEAK = 0x0000000002000000;          // 管理面板暴露
+    RT_TOKENLEAK = 0x0000000004000000;          // 认证令牌信息泄露
+
+    // modsecurity规则初始化文件，前端不用将下面的文件下发加载
+    RT_CRS_SETUP = 0x0000000010000000;
+    RT_ENGINE_SETUP = 0x0000000020000000;
+  }
+
+  enum ParanoiaLevel {
+    L1 = 0;
+    L2 = 1;
+    L3 = 2;
+    L4 = 3;
+  }
+  // 防护等级
+  ParanoiaLevel paranoia_level = 1;
+
+  // 初始化规则,默认加载 filters/source/extensions/filters/http/waf/waf-conf/before.conf
+  string rules_path_before = 2;
+
+  // 核心校验规则
+  fixed64 rule_types = 3;
+
+  // 分数评估与日志规则,默认加载 filters/source/extensions/filters/http/waf/waf-conf/after.conf
+  string rules_path_after = 4;
+
+  // If set, a webhook will be called when a rule is matched. (non-disruptive actions only since
+  // ModSecurity >= v3.0.3)
+  message Webhook {
+    // The http server URI to trigger the webhook.
+    envoy.config.core.v3.HttpUri http_uri = 1 [(validate.rules).message.required = true];
+
+    // If provided, an X-Envoy-Webhook-Signature-Value header will be added to the request with
+    // HMAC-SHA256 over the contents and `secret` as its key.
+    string secret = 2;
+  }
+
+  Webhook webhook = 5;
+
+  // 仅检测，不拒绝
+  bool detection_only = 6;
+
+  // 性能模式
+  enum Moderation {
+    performance = 0;
+    precise = 1;
+  }
+  Moderation mode = 7;
+
+  // 规则信息
+  message RuleInfo {
+    string id = 1;
+    fixed32 level = 2;
+  }
+  // 禁用的规则集
+  repeated RuleInfo disable_rules = 8;
+
+  // 放行的规则集
+  repeated RuleInfo pass_rules = 9;
+
+  // 加密压缩包路径
+  string tar_rules_path = 10;
+
+  // ip白名单
+  repeated envoy.extensions.filters.http.common.ip_whitelist.v3.IpWhitelist ip_whitelist = 11 [(validate.rules).repeated = {max_items: 256}];
+
+  // 以下是限速配置，全局配置中控制面默认不赋值，在路由级别配置中赋值
+  // 是否启用该过滤器
+  bool enable = 12;
+
+  // 是否空转
+  bool dryrun = 13;
+  
+  // 规则
+  repeated envoy.extensions.filters.http.strong_global_ratelimit.v3.Rule rules = 14 [(validate.rules).repeated = {max_items: 256}];
+  
+  // 规则hash
+  uint64 rules_hash = 15;
+
+  //外部限速服务
+  envoy.config.core.v3.GrpcService grpc = 16 [(validate.rules).message = {required: false}];
+
+  // waf调用限速标记，供限速插件内部区分
+  bool waf_ratelimit = 17;
+}
+
+message WafRoute {
+  enum RuleType {
+    RT_Placeholder = 0x0000000000000000;         // 无意义，占位而已
+    RT_ScannerDetection = 0x0000000000000001;    // 扫描检测
+    RT_ProtocolEnforcement = 0x0000000000000002; // 防范协议和编码问题
+    RT_ProtocolAttack = 0x0000000000000004;      // 防范标头注入、请求走私和响应拆分
+    RT_MultipartAttack = 0x0000000000000008;     // 防范表单攻击
+    RT_ApplicationAttackLfi = 0x0000000000000010;     // 防范文件和路径攻击
+    RT_ApplicationAttackRfi = 0x0000000000000020;     // 防范远程文件包含 (rfi) 攻击
+    RT_ApplicationAttackRce = 0x0000000000000040;     // 防范远程代码执行攻击
+    RT_ApplicationAttackPhp = 0x0000000000000080;     // 防范 php 注入攻击
+    RT_ApplicationAttackGeneric = 0x0000000000000100; // 防范通用应用程序攻击
+    RT_ApplicationAttackXss = 0x0000000000000200;     // 防范跨站点脚本攻击
+    RT_ApplicationAttackSqli = 0x0000000000000400;    // 防范 sql 注入攻击
+    RT_ApplicationAttackSessionFixation = 0x0000000000000800; // 防范会话固定攻击
+    RT_ApplicationAttackJava = 0x0000000000001000;            // 防范 java 攻击
+    RT_BlockingEvaluation = 0x0000000000002000; // 用于插入请求阈值检测，保留项
+    RT_DataLeakages = 0x0000000000004000;       // 防范 响应数据泄露
+    RT_DataLeakagesSql = 0x0000000000008000;    // 防范 响应sql数据泄露
+    RT_DataLeakagesJava = 0x0000000000010000;   // 防范 响应java数据泄露
+    RT_DataLeakagesPhp = 0x0000000000020000;    // 防范 响应php数据泄露
+    RT_DataLeakagesIis = 0x0000000000040000;    // 防范 响应iis数据泄露
+    RT_WebShells = 0x0000000000080000;          // 拦截响应web shell
+    RT_APILEAK = 0x0000000000100000;            // 调试页面泄露
+    RT_BACKUPLEAK = 0x0000000000200000;         // 备份文件泄露
+    RT_CONFIGLEAK = 0x0000000000400000;         // 核心配置文件泄露
+    RT_FILELEAK = 0x0000000000800000;           // 属性配置文件泄露
+    RT_LOGLEAK = 0x0000000001000000;            // 日志信息泄露
+    RT_PANELLEAK = 0x0000000002000000;          // 管理面板暴露
+    RT_TOKENLEAK = 0x0000000004000000;          // 认证令牌信息泄露
+  }
+
+  enum ParanoiaLevel {
+    L1 = 0;
+    L2 = 1;
+    L3 = 2;
+    L4 = 3;
+  }
+  // 防护等级
+  ParanoiaLevel paranoia_level = 1;
+
+  // 初始化规则,默认加载 filters/source/extensions/filters/http/waf/waf-conf/before.conf
+  string rules_path_before = 2;
+
+  // 核心校验规则
+  fixed64 rule_types = 3;
+
+  // 分数评估与日志规则,默认加载 filters/source/extensions/filters/http/waf/waf-conf/after.conf
+  string rules_path_after = 4;
+
+  // If set, a webhook will be called when a rule is matched. (non-disruptive actions only since
+  // ModSecurity >= v3.0.3)
+  message Webhook {
+    // The http server URI to trigger the webhook.
+    envoy.config.core.v3.HttpUri http_uri = 1 [(validate.rules).message.required = true];
+
+    // If provided, an X-Envoy-Webhook-Signature-Value header will be added to the request with
+    // HMAC-SHA256 over the contents and `secret` as its key.
+    string secret = 2;
+  }
+
+  Webhook webhook = 5;
+
+  // 仅检测，不拒绝
+  bool detection_only = 6;
+
+  // 性能模式
+  enum Moderation {
+    performance = 0;
+    precise = 1;
+  }
+  Moderation mode = 7;
+
+  // 规则信息
+  message RuleInfo {
+    string id = 1;
+    fixed32 level = 2;
+  }
+  // 禁用的规则集
+  repeated RuleInfo disable_rules = 8;
+
+  // 放行的规则集
+  repeated RuleInfo pass_rules = 9;
+
+  // 加密压缩包路径
+  string tar_rules_path = 10;
+
+  // ip白名单
+  repeated envoy.extensions.filters.http.common.ip_whitelist.v3.IpWhitelist ip_whitelist = 11 [(validate.rules).repeated = {max_items: 256}];
+
+  // 以下是限速配置，全局配置中控制面默认不赋值，在路由级别配置中赋值
+  // 是否启用该过滤器
+  bool enable = 12;
+
+  // 是否空转
+  bool dryrun = 13;
+  
+  // 规则
+  repeated envoy.extensions.filters.http.strong_global_ratelimit.v3.Rule rules = 14 [(validate.rules).repeated = {max_items: 256}];
+  
+  // 规则hash
+  uint64 rules_hash = 15;
+
+  oneof disable_options {
+    bool disable = 16;
+    bool disable_request = 17;
+    bool disable_response = 18;
+  }
+  // waf调用限速标记，供限速插件内部区分
+  bool waf_ratelimit = 19;
+}

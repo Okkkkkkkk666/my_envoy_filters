@@ -1,0 +1,92 @@
+syntax = "proto3";
+
+package envoy.extensions.filters.http.common.ratelimit.v3;
+
+import "udpa/annotations/status.proto";
+import "validate/validate.proto";
+
+option go_package = "git.ouryun.cn/base/envoy-go-proto/filters/api/envoy/extensions/filters/http/common/ratelimit/v3;ratelimitv3";
+option (udpa.annotations.file_status).package_version_status = ACTIVE;
+
+service RateLimitService {
+  rpc ShouldRateLimit(RateLimitRequest) returns (RateLimitResponse) {
+  }
+  rpc CleanQuota(CleanQuotaRequest) returns (CleanQuotaResponse){
+  }
+}
+
+// 流量配额
+message Quota {
+  // 时间段，单位秒
+  uint32 duration = 1;
+
+  // 在一个duration内最多允许多少次访问
+  uint32 max_count = 2;
+}
+
+message RateLimitPolicy {
+
+  string key = 1 [(validate.rules).string = {min_len: 1}];
+
+  // 配额
+  repeated Quota quota = 2 [(validate.rules).repeated = {min_items: 1 max_items: 2}];
+
+  //是否添加响应头
+  bool add_headers = 3;
+
+  // 封禁时间
+  uint32 block_time = 4;
+
+  // 是否空转
+  bool dryrun = 5;
+
+  // 规则名称
+  string rule_name = 6;
+}
+
+message RateLimitRequest {
+
+  repeated RateLimitPolicy ratelimit_policys = 1 [(validate.rules).repeated = {max_items: 256}];
+
+}
+
+message RateLimitResponse {
+
+  enum Status {
+    // 未知响应代码
+    UNKNOWN = 0;
+    // 未超过配额的响应代码
+    OK = 1;   
+    // 超过配额的响应代码
+    OVER_LIMIT = 2;
+  }
+  
+  Status status = 1;
+  // 单位时间段
+  uint32 duration = 2;
+  // 剩余请求次数
+  uint32 remaining = 3;
+  // 是否添加响应头
+  bool add_headers = 4;
+  // 是否空转
+  bool dryrun = 5;
+  // 规则名称
+  string rule_name = 6;
+}
+
+message CleanQuotaRequest{
+  repeated string key_lists = 1 [(validate.rules).repeated = {max_items: 256}];
+}
+
+message CleanQuotaResponse{
+  
+  enum Result{
+    //成功
+    SUCCESS = 0;
+
+    // 失败
+    FAILURE = 1;
+  }
+  
+  Result result = 1;
+}

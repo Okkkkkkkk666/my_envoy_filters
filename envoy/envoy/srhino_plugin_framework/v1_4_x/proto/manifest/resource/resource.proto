@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package srhino_plugin_framework.v1_4_x.proto.manifest.resource;
+
+import "envoy/srhino_plugin_framework/v1_4_x/proto/manifest/resource/cluster.proto";
+import "envoy/srhino_plugin_framework/v1_4_x/proto/manifest/resource/file.proto";
+import "envoy/srhino_plugin_framework/v1_4_x/proto/manifest/resource/listener.proto";
+
+import "validate/validate.proto";
+
+// 资源对象
+message Resource {
+  // 资源名称
+  string name = 1 [(validate.rules).string = {min_len: 1}];
+  // 资源类型
+  oneof type {
+    Cluster cluster = 2;
+    File file = 3;
+    Listener listener = 4;
+  }
+}

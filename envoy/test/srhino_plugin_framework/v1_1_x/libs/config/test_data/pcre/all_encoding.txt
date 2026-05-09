@@ -1,0 +1,8 @@
+# iso8859-1
+china
+# utf-8
+中国
+# gbk no gb2312
+侲侳侴侶
+# gb2312 no ascii
+捌扒叭吧

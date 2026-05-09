@@ -1,0 +1,70 @@
+syntax = "proto3";
+package envoy.extensions.filters.http.waf.v3;
+
+import "filters/api/envoy/extensions/filters/http/waf/v3/waf.proto";
+
+option java_package = "io.envoyproxy.envoy.extensions.filters.http.waf.v3";
+option java_outer_classname = "WafProto";
+option java_multiple_files = true;
+option go_package = "git.ouryun.cn/base/envoy-go-proto/filters/api/envoy/extensions/filters/http/waf/v3;wafv3";
+
+enum DefendModeration {
+  PLACEHOLDER_MODERATION = 0; // 占位，无意义
+  DETECT = 1;
+  DEFEND = 2;
+}
+
+enum PayloadStage {
+  PLACEHOLDER_STAGE = 0; // 占位，无意义
+  REQUESTLINE = 1;
+  REQUESTHEAD = 2;
+  REQUESTBODY = 3;
+  RESPONSELINE = 4;
+  RESPONSEHEAD = 5;
+  RESPONSEBODY = 6;
+}
+
+message MatchPayload {
+  uint32 pos_start = 1;
+  uint32 pos_end = 2;
+  string payload_key = 3;
+  string payload_value = 4;
+  PayloadStage stage = 5;
+}
+
+message Quota {
+  // 时间段，单位秒
+  uint32 duration = 1;
+
+  // 在一个duration内最多允许多少次访问
+  uint32 max_count = 2;
+}
+
+message WafLog {
+  //是否被拒绝，true:被拦截，false:放行
+  bool refuse = 1;
+  //请求方法
+  string method = 2;
+  //通过的路由
+  string path = 3;
+  //请求参数
+  string param = 4;
+  //攻击来源ip
+  string downstream = 5;
+  // 攻击方式名称对应表,类型对应参考envoy::extensions::filters::http::waf::v3::WafGlobal_RuleType
+  fixed64 filenames = 6;
+  // 限速
+  bool ratelimit_refuse = 7;
+  // 触发的规则
+  repeated fixed64 rule_id = 8;
+  // 限速规则
+  Quota quota = 9;
+  // 规则匹配详情
+  repeated MatchPayload match_payloads = 10;
+  // 防护等级
+  envoy.extensions.filters.http.waf.v3.WafGlobal.ParanoiaLevel  paranoia_level = 11;
+  // 防护模式
+  DefendModeration mode = 12;
+  // 规则状态:true-仅检测  false-防护
+  repeated bool rule_detect_status = 13;
+}

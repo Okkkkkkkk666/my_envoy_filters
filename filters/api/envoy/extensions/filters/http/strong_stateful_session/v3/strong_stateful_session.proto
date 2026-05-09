@@ -1,0 +1,81 @@
+syntax = "proto3";
+
+package envoy.extensions.filters.http.strong_stateful_session.v3;
+
+import "google/protobuf/duration.proto";
+import "envoy/config/core/v3/grpc_service.proto";
+
+import "udpa/annotations/status.proto";
+import "validate/validate.proto";
+
+import "google/protobuf/wrappers.proto";
+
+option java_package = "io.envoyproxy.envoy.extensions.filters.http.strong_stateful_session.v3";
+option java_outer_classname = "StongStatefulSessionProto";
+option java_multiple_files = true;
+option go_package = "git.ouryun.cn/base/envoy-go-proto/filters/api/envoy/extensions/filters/http/strong_stateful_session/v3;strong_stateful_sessionv3";
+option (udpa.annotations.file_status).package_version_status = ACTIVE;
+
+// 源IP
+message SourceIp {
+  // IPv4掩码
+  google.protobuf.UInt32Value prefix_len = 1 [(validate.rules).uint32 = {lte: 128}];
+}
+
+// SSL Session Id
+message SslSession {
+}
+
+// HTTP 头部
+message HttpHeader {
+  string name = 1 [(validate.rules).string = {min_len: 1 max_len: 255}];
+}
+
+// Cookie
+message Cookie {
+  oneof form {
+    // 插入
+    bool insert = 1;
+    // 重写
+    bool rewrite = 2;
+    // 读取
+    bool read = 3;
+  }
+  // 是否启用session cookie
+  bool session = 4;
+  // cookie名称
+  string name = 5 [(validate.rules).string = {min_len: 1 max_len: 31}];
+  // cookie域名
+  string domain = 6 [(validate.rules).string = {max_len: 255}];
+  // cookie路径
+  string path = 7 [(validate.rules).string = {max_len: 255}];
+}
+
+message StrongStatefulSessionGlobal {
+  // 会话保持的方式，只能选一个
+  oneof from {
+    SourceIp src_ip = 1;
+    SslSession ssl_session = 2;
+    HttpHeader header = 3;
+    Cookie cookie = 4;
+  }
+
+  // 会话保持持续时间
+  google.protobuf.Duration ttl = 5;
+
+  // grpc服务器地址
+  envoy.config.core.v3.GrpcService grpc_service = 6;
+}
+
+message StrongStatefulSessionPerRoute{
+  // 会话保持的方式，只能选一个
+  oneof from {
+    SourceIp src_ip = 1;
+    SslSession ssl_session = 2;
+    HttpHeader header = 3;
+    Cookie cookie = 4;
+  }
+
+  // 会话保持持续时间
+  google.protobuf.Duration ttl = 5;
+}

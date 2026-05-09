@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package envoy.extensions.filters.http.bot_detection.v3;
+
+import "udpa/annotations/status.proto";
+import "validate/validate.proto";
+
+option java_package = "io.envoyproxy.envoy.extensions.filters.http.bot_detection.v3";
+option java_outer_classname = "BotDetectionProto";
+option java_multiple_files = true;
+option go_package = "github.com/ouryun/envoy/filters/api/envoy/extensions/filters/http/bot_detection/v3;bot_detectionv3";
+option (udpa.annotations.file_status).package_version_status = ACTIVE;
+
+message Matcher {
+  // 白名单，正则表达式数组
+  repeated string allow_list = 1 [(validate.rules).repeated .items.string = {min_len: 1}];
+
+  // 黑名单，正则表达式数组
+  repeated string deny_list = 2 [(validate.rules).repeated .items.string = {min_len: 1}];
+}
+
+message BotDetectionRoute {
+  Matcher matcher = 1;
+  // 不存在User-Agent时的处理模式，true：放行 false：拒绝
+  bool none_user_agent_mode = 2;
+  // 是否启用该插件
+  bool enable = 3;
+  // 加载机器人正则的文件路径,默认加载filters/source/extensions/filters/http/bot_detection/impl/bot_regex_list.txt
+  string filename = 4;
+}
+
+message BotDetectionGlobal {
+}

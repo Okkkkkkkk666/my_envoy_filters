@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package envoy.extensions.filters.http.strong_local_ratelimit.v3;
+
+import "validate/validate.proto";
+
+option java_package = "io.envoyproxy.envoy.extensions.filters.http.strong_local_ratelimit.v3";
+option java_outer_classname = "StrongLocalRatelimitLog";
+option java_multiple_files = true;
+option go_package = "git.ouryun.cn/base/envoy-go-proto/filters/api/envoy/extensions/filters/http/strong_local_ratelimit/v3;strong_local_ratelimitv3";
+
+message StrongLocalRatelimitLog {
+  enum Action {
+    ALLOW = 0;//没限流
+    LIMIT = 1;//限流
+  }
+  enum Target {
+    ALL = 0;//全局(限流通过的对象也为全局)
+    IP = 1;//IP
+    HEADER = 2;//头部
+  }
+
+  // 插件拒绝还是放行
+  int32 act = 1 [(validate.rules).int32 = {gte: 0, lte: 1}];
+  //限流规则对象
+  int32 target = 2 [(validate.rules).int32 = {gte: 0, lte: 2}];
+}

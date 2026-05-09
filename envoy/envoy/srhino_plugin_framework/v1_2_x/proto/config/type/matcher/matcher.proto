@@ -1,0 +1,204 @@
+syntax = "proto3";
+
+package srhino_plugin_framework.v1_2_x.proto.config.type.matcher;
+
+// import "envoy/config/core/v3/address.proto";
+// import "envoy/config/route/v3/route_components.proto";
+
+import "envoy/srhino_plugin_framework/v1_2_x/proto/config/core/cidr.proto";
+import "envoy/srhino_plugin_framework/v1_2_x/proto/config/type/matcher/header.proto";
+import "validate/validate.proto";
+
+message IpSet {
+  repeated core.CidrRange list = 1;
+  string name = 2;
+  string desc = 3;
+}
+
+// Parameters for matching routes to requests received by a Gloo-managed proxy
+message Matcher {
+  oneof path_specifier {
+    // option (validate.required) = true;
+
+    // If specified, the route is a prefix rule meaning that the prefix must
+    // match the beginning of the *:path* header.
+    // 校验：正则表达式（"^[!-~]{0,}$"）
+    string prefix = 1 [(validate.rules).string.pattern = "^[!-~]{0,}$"];
+
+    // If specified, the route is an exact path rule meaning that the path must
+    // exactly match the *:path* header once the query string is removed.
+    // 校验：正则表达式（"^[!-~]{0,}$"）
+    string exact = 2 [(validate.rules).string.pattern = "^[!-~]{0,}$"];
+
+    // If specified, the route is a regular expression rule meaning that the
+    // regex must match the *:path* header once the query string is removed. The entire path
+    // (without the query string) must match the regex. The rule will not match if only a
+    // sub-sequence of the *:path* header matches the regex. The regex grammar is defined `here
+    // <http://en.cppreference.com/w/cpp/regex/ecmascript>`_.
+    //
+    // Examples:<br/>
+    //
+    // * The regex */b[io]t* matches the path */bit*<br/>
+    // * The regex */b[io]t* matches the path */bot*<br/>
+    // * The regex */b[io]t* does not match the path */bite*<br/>
+    // * The regex */b[io]t* does not match the path */bit/bot*<br/><br/>
+    //
+    // Note that the complexity of the regex is constrained by the regex engine's "program size" setting.
+    // If your regex is too complex, you may need to adjust the `regexMaxProgramSize` field
+    // in the `GlooOptions` section of your `Settings` resource
+
+    // 校验：正则表达式（"^[!-~]{1,}$"）
+    string regex = 3 [(validate.rules).string.pattern = "^[!-~]{1,}$"];
+
+    // 包含匹配
+    // 校验：正则表达式（"^[!-~]{1,}$"）
+    string contains = 9 [(validate.rules).string.pattern = "^[!-~]{1,}$"];
+  }
+
+  // Indicates that prefix/path matching should be case sensitive. The default is true.
+  bool case_sensitive = 4;
+
+  // Specifies a set of headers that the route should match on. The router will
+  // check the request’s headers against all the specified headers in the route
+  // config. A match will happen if all the headers in the route are present in
+  // the request with the same values (or based on presence if the value field
+  // is not in the config).
+  // repeated HeaderMatcher headers = 6;
+  repeated type.matcher.HeaderMatcher headers = 6;
+
+  // Specifies a set of URL query parameters on which the route should
+  // match. The router will check the query string from the *path* header
+  // against all the specified query parameters. If the number of specified
+  // query parameters is nonzero, they all must match the *path* header's
+  // query string for a match to occur.
+  repeated QueryParameterMatcher query_parameters = 7;
+
+  // HTTP Method/Verb(s) to match on. If none specified, the matcher will ignore the HTTP Method
+  // 校验：Method/Verb(s) in ["POST", "GET", "PUT", "PATCH", "DELETE", "CONNECT", "OPTIONS", "TRACE", "HEAD"]
+  repeated string methods = 8 [(validate.rules).repeated = {
+    ignore_empty: true,
+    unique: true,
+    items: {
+      string: {in: ["GET", "HEAD", "POST", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", "PATCH"]}
+    }
+  }];
+
+  // 对路径取反
+  bool path_invert = 10;
+  // 对methods取反
+  bool method_invert = 11;
+  // ip匹配
+  IpList ip_list = 12;
+  // 用户名匹配
+  repeated UserMatcher users = 13;
+  // 路径排除项
+  repeated string exclude_path = 14;
+  // 地区匹配
+  RegionMatcher region = 15;
+  // 来源地址
+  repeated type.matcher.HeaderMatcher referers = 16;
+  // 时间匹配
+  DateMatcher date = 17;
+}
+
+// Query parameter matching treats the query string of a request's :path header
+// as an ampersand-separated list of keys and/or key=value elements.
+message QueryParameterMatcher {
+  // Specifies the name of a key that must be present in the requested
+  // *path*'s query string.
+  //string name = 1;
+
+  // Specifies the value of the key. If the value is absent, a request
+  // that contains the key in its query string will match, whether the
+  // key appears with a value (e.g., "?debug=true") or not (e.g., "?debug")
+  //string value = 2;
+
+  // Specifies whether the query parameter value is a regular expression.
+  // Defaults to false. The entire query parameter value (i.e., the part to
+  // the right of the equals sign in "key=value") must match the regex.
+  // E.g., the regex "\d+$" will match "123" but not "a123" or "123a".
+  //bool regex = 3;
+
+  // 校验：正则表达式（"^[!-~]{1,}$"）
+  string name = 1 [(validate.rules).string.pattern = "^[!-~]{1,}$"];
+
+  QueryParameterMatcherValue value = 2;
+}
+
+message QueryParameterMatcherValue {
+
+  oneof match_specifier {
+    // option (validate.required) = true;
+
+    bool present = 1;
+
+    // 校验：正则表达式（"^[!-~]{1,}$"）
+    string contains = 2 [(validate.rules).string.pattern = "^[!-~]{1,}$"];
+
+    // 校验：正则表达式（"^[!-~]{1,}$"）
+    string exact = 3 [(validate.rules).string.pattern = "^[!-~]{1,}$"];
+
+    // 校验：正则表达式（"^[!-~]{1,}$"）
+    string regex = 4 [(validate.rules).string.pattern = "^[!-~]{1,}$"];
+  }
+
+  bool case_sensitive = 5;
+  bool invert = 6;
+}
+
+message IPGroups {
+  IpSet ip_set = 1;
+  repeated IpRange ip_range = 2;
+  bool invert = 3;
+  uint32 id = 4;
+}
+
+message IpList {
+  IpSet ip_set = 1;
+  repeated IpRange ip_range = 2;
+  bool invert = 3;
+  repeated IPGroups ip_groups = 4;
+}
+
+message IpRange {
+  // 起始ip
+  string start_ip = 1
+      [(validate.rules).string.pattern = "^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$"];
+
+  // 终止ip
+  string end_ip = 2
+      [(validate.rules).string.pattern = "^(\\d{1,3}|\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})$"];
+}
+
+message UserMatcher {
+  string user_name = 1;
+  // 不区分大小写，默认为false
+  bool case_sensitive = 2;
+  // 取反
+  bool invert = 3;
+}
+
+message RegionMatcher {
+  // 地域名称
+  repeated string name = 1;
+  bool invert = 2;
+}
+
+message Time {
+  // 星期
+  repeated string week = 1;
+  //时间段
+  repeated string time_period = 2;
+}
+
+message DateMatcher {
+  // 精确时间 年月日时分秒
+  // 开始时间
+  string exact_date_start = 1;
+  // 结束时间
+  string exact_date_end = 2;
+    // 时间
+  Time time = 3;
+  // 取反
+  bool invert = 4;
+}

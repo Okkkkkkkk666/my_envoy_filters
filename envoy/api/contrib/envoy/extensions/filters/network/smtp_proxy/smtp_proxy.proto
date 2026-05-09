@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package envoy.extensions.filters.network.smtp_proxy.v3;
+
+import "validate/validate.proto";
+
+message SmtpProxy {
+  string stat_prefix = 1;
+  uint32 max_line_length = 2;
+}

@@ -1,0 +1,182 @@
+syntax = "proto3";
+
+package envoy.extensions.filters.http.common.algorithm.v3;
+
+import "udpa/annotations/status.proto";
+
+option go_package = "git.ouryun.cn/base/envoy-go-proto/filters/api/envoy/extensions/filters/http/common/algorithm/v3;algorithmv3";
+option (udpa.annotations.file_status).package_version_status = ACTIVE;
+
+// 规则：遮盖或保留
+enum CoverType {
+    COVER_UNKNOWN = 0;
+    COVER = 1;
+    RESERVE = 2;
+}
+// 样本库
+message SampleLibrary {
+  string unique_sample_id = 1;
+  string sample_content = 2;
+}
+// 遮盖
+message CoverRewrite {
+  // 遮盖方式
+  enum CoverMode {
+    COVER_UNKNOWN = 0;
+    COVER_ALL = 1;
+    RESERVE_FIRST1_LAST1 = 2;
+    RESERVE_FIRST3_LAST2 = 3;
+    RESERVE_FIRST3_LAST4 = 4;
+    CUSTOM = 5;
+    RESERVE_LAST4 = 6;
+  }
+  // 规则定义
+  message CoverRuleDefinition {
+    uint32 start = 1;
+    uint32 end = 2;
+  }
+  CoverMode cover_mode = 1; // 遮盖方式
+  repeated CoverRuleDefinition rules = 2; // 自定义规则
+  string cover_character = 3; // 遮盖字符
+  CoverType cover_type = 4; //遮盖类型
+}
+
+// 替换规则
+message ReplaceRewrite {
+  // 替换规则的类型
+  enum RuleType {
+    RULE_UNKNOWN = 0;
+    REPLACE_ALL = 1;
+    REPLACE_FIRST3 = 2;
+    REPLACE_LAST4 = 3;
+    REGEX_MATCH = 4;
+    CUSTOM = 5;
+  }
+
+  // 替换值的类型
+  enum ValueType {
+    VALUE_UNKNOWN = 0;
+    FIXED_VALUE = 1;
+    RANDOM_VALUE = 2;
+    SAMPLE_VALUE = 3;
+  }
+  // 规则定义
+  message ReplaceRuleDefinition {
+    // 位数范围
+    uint32 start = 1;
+    uint32 end = 2;
+  }
+  // 固定值替换规则的定义
+  message FixedReplace {
+  }
+  // 正则匹配替换规则的定义
+  message RegexMatch {
+    string regex = 1;
+  }
+  // 自定义替换规则的定义
+  message CustomRule {
+    repeated ReplaceRuleDefinition rules = 1; // 规则列表，最少一条，最后一条不可删除，多条规则关系为"且"
+    CoverType cover_type = 2;
+  }
+  RuleType rule_type = 1; // 替换方式
+  // 具体的替换规则
+  oneof rule_definition {
+    // 三种固定替换
+    FixedReplace replace = 2;
+    // 正则匹配
+    RegexMatch regex_match = 3;
+    // 自定义
+    CustomRule custom = 4;
+  }
+  string replace_value = 5; // 替换值
+  ValueType value_type = 6;
+  SampleLibrary sample_value = 7; //样本值
+}
+
+// 变换
+message TransformRewrite {
+  // 变换类型
+  enum TransformType {
+    TRANS_UNKNOWN = 0;
+    NUMERIC_ROUND = 1;
+    DATE_ROUND = 2;
+    CHARACTER_SHIFT = 3;
+  }
+
+  message NumericRound {
+    // 保留小数点前几位
+    uint32 decimal_places = 1;
+  }
+
+  message DateRound {
+    // 日期取整级别
+    enum DateRoundLevel {
+      DATA_UNKNOWN = 0;
+      YEAR = 1;
+      MONTH = 2;
+      DAY = 3;
+      HOUR = 4;
+      MINUTE = 5;
+    }
+    // 日期取整级别
+    DateRoundLevel level = 1;
+  }
+
+  message CharacterShift {
+    // 移动方向
+    enum ShiftDirection {
+      SHIFT_UNKNOWN = 0;
+      LEFT = 1;
+      RIGHT = 2;
+    }
+    // 移动方向
+    ShiftDirection direction = 1;
+    // 移动位数
+    uint32 shift_amount = 2;
+  }
+
+  // 变换类型
+  TransformType transform_type = 1;
+
+  // 具体的变换规则
+  oneof transform_rule {
+    // 数字取整规则
+    NumericRound numeric_round = 2;
+    // 日期取整规则
+    DateRound date_round = 3;
+    // 字符位移规则
+    CharacterShift character_shift = 4;
+  }
+}
+
+// 洗牌
+message ShuffleRewrite {
+}
+
+// 哈希加密
+message HashEncryptRewrite {
+  // 加密算法
+  enum HashEncryptionAlgorithm {
+    HASH_UNKNOWN = 0;
+    MD5 = 1;
+    SHA256 = 2;
+    SHA512 = 3;
+    SM3 = 4;
+  }
+  HashEncryptionAlgorithm encryption_algorithm = 1;
+  // 加盐值
+  string salt_value = 2;
+}
+
+// 加密算法
+message EncryptAlgorithmRewrite {
+  enum EncryptionAlgorithm {
+    ENCRYPTION_UNKNOWN = 0;
+    DES = 1;
+    TRIPLE_DES = 2;
+    AES = 3;
+  }
+  EncryptionAlgorithm encryption_algorithm = 1;
+  // 密钥
+  string encryption_key = 2;
+}

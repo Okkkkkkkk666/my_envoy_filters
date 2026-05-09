@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package srhino_plugin_framework.v1_4_x.proto.manifest;
+
+import "validate/validate.proto";
+
+message Controller {
+  enum Method {
+    GET = 0;
+    POST = 1;
+  }
+
+  message Param {
+    string key = 1 [(validate.rules).string = {min_len: 1}];
+    string description = 2 [(validate.rules).string = {max_len: 255}];
+  }
+
+  string name = 1 [(validate.rules).string = {min_len: 1 max_len: 64}];
+  string description = 2 [(validate.rules).string = {max_len: 255}];
+  Method method = 3;
+  string path = 4 [(validate.rules).string = {min_len: 1 max_len: 255 prefix: "/"}];
+  repeated Param params = 5;
+  bool global = 6;
+}

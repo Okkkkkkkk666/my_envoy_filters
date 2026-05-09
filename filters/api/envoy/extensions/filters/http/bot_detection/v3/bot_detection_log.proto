@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package envoy.extensions.filters.http.bot_detection.v3;
+
+
+import "udpa/annotations/status.proto";
+
+option java_package = "io.envoyproxy.envoy.extensions.filters.http.bot_detection.v3";
+option java_outer_classname = "BotDetectionProto";
+option java_multiple_files = true;
+option go_package = "github.com/ouryun/envoy/filters/api/envoy/extensions/filters/http/bot_detection/v3;bot_detectionv3";
+option (udpa.annotations.file_status).package_version_status = ACTIVE;
+
+message BotDetectionLog {
+  // true:拒绝 false:放行
+  bool limit = 1;
+}

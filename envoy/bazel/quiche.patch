@@ -1,0 +1,50 @@
+diff --git quic/core/crypto/quic_hkdf.h quic/core/crypto/quic_hkdf.h
+index 9a14bc464..8302073d8 100644
+--- quic/core/crypto/quic_hkdf.h
++++ quic/core/crypto/quic_hkdf.h
+@@ -6,6 +6,7 @@
+ #define QUICHE_QUIC_CORE_CRYPTO_QUIC_HKDF_H_
+ 
+ #include <vector>
++#include <cstdint>
+ 
+ #include "absl/strings/string_view.h"
+ #include "quic/platform/api/quic_export.h"
+diff --git quic/core/qpack/qpack_instructions.h quic/core/qpack/qpack_instructions.h
+index 56613de37..292887776 100644
+--- quic/core/qpack/qpack_instructions.h
++++ quic/core/qpack/qpack_instructions.h
+@@ -71,6 +71,9 @@ using QpackInstructionFields = std::vector<QpackInstructionField>;
+ // string literal type to guarantee that all bytes of the instruction are
+ // consumed.
+ struct QUIC_EXPORT_PRIVATE QpackInstruction {
++  QpackInstruction(QpackInstructionOpcode opcode, QpackInstructionFields fields)
++      : opcode(std::move(opcode)), fields(std::move(fields)) {}
++
+   QpackInstruction(const QpackInstruction&) = delete;
+   const QpackInstruction& operator=(const QpackInstruction&) = delete;
+ 
+diff --git quic/core/quic_connection_id.h quic/core/quic_connection_id.h
+index a0669d7d6..0b2197db1 100644
+--- quic/core/quic_connection_id.h
++++ quic/core/quic_connection_id.h
+@@ -7,6 +7,7 @@
+ 
+ #include <string>
+ #include <vector>
++#include <cstdint>
+ 
+ #include "quic/platform/api/quic_export.h"
+ 
+diff --git quic/core/quic_tag.h quic/core/quic_tag.h
+index c77219eb3..d3aa92be0 100644
+--- quic/core/quic_tag.h
++++ quic/core/quic_tag.h
+@@ -8,6 +8,7 @@
+ #include <map>
+ #include <string>
+ #include <vector>
++#include <cstdint>
+ 
+ #include "absl/strings/string_view.h"
+ #include "quic/platform/api/quic_export.h"

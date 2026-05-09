@@ -1,0 +1,111 @@
+syntax = "proto3";
+
+package srhino_plugin_framework.v1_0_x.proto.manifest;
+
+import "envoy/srhino_plugin_framework/v1_0_x/proto/manifest/controller.proto";
+import "envoy/srhino_plugin_framework/v1_0_x/proto/manifest/resource/resource.proto";
+import "validate/validate.proto";
+
+message Manifest {
+  // manifest版本
+  int32 manifest_version = 1;
+  // 依赖的框架版本
+  string framework_minimum_required = 2 [(validate.rules).string = {min_len: 1}];
+  reserved 3, 4, 5, 6, 7, 8, 9;
+
+  // 申请的资源
+  repeated resource.Resource resources = 10;
+  // HTTP管理接口
+  repeated Controller controllers = 11;
+  // 插件共享数据
+  repeated PluginShares plugin_shares = 12;
+  // 插件的commit id
+  string git_hash = 13;
+  reserved 14, 15, 16, 17, 18, 19;
+
+  // 插件英文简称
+  string name = 20 [(validate.rules).string = {min_len: 1}];
+  // 插件完整中文名
+  string chinese_name = 21 [(validate.rules).string = {min_len: 1}];
+  // 插件描述信息
+  string description = 22 [(validate.rules).string = {min_len: 1}];
+  // 插件版本
+  string version = 23 [(validate.rules).string = {min_len: 1}];
+  // 插件工作层(L4/L7)
+  int32 layer = 24;
+  // 插件类型
+  repeated Type types = 25;
+  // 插件标签
+  repeated string tags = 26 [(validate.rules).repeated = {items {string {min_len: 1 max_len: 32}}}];
+  // 插件收费模式
+  oneof pay_mode {
+    option (validate.required) = true;
+
+    // 免费
+    FreeCharge free_charge = 27;
+    // 时间收费
+    TimeCharge time_charge = 28;
+    // 一次性(买断)收费
+    OneTimeCharge onetime_charge = 29;
+  }
+
+  // 图标
+  Icons icons = 30;
+  // 更新日志文件的相对路径
+  string change_log = 31 [(validate.rules).string = {min_len: 1}];
+  string group = 32 [(validate.rules).string = {min_len: 1}];
+  // 是否是全局配置
+  bool global_config = 33;
+  // 使用对象
+  string using_object = 34 [(validate.rules).string = {min_len: 1}];
+  // 是否是内置插件
+  bool is_builtin = 35;
+  // 前端版本
+  string ui_version = 36;
+  reserved 37, 38, 39, 40, 41;
+}
+
+// 插件分类
+enum Type {
+  // 应用安全
+  ApplicationSecurity = 0;
+  // 数据与隐私安全
+  DataLossPrevention = 1;
+  // 身份认证
+  Authentication = 2;
+  // 网络与基础设备安全
+  NetworkInfrastructureSecurity = 3;
+  // 威胁检测
+  ThreatDetection = 4;
+}
+
+// 免费
+message FreeCharge {
+  // TODO: 后续根据需求增加相应字段
+}
+
+// 时间收费
+message TimeCharge {
+  // TODO: 后续根据需求增加相应字段
+}
+
+// 一次性(买断)收费
+message OneTimeCharge {
+  // TODO: 后续根据需求增加相应字段
+}
+
+message Icons {
+  // 16*16大小的图标相对路径
+  string icon_16 = 1;
+  // 32*32大小的图标相对路径
+  string icon_32 = 2;
+  // 48*48大小的图标相对路径
+  string icon_48 = 3;
+  // 128*128大小的图标相对路径
+  string icon_128 = 4;
+}
+
+message PluginShares {
+  string key = 1 [(validate.rules).string = {min_len: 1}];
+  string description = 2 [(validate.rules).string = {max_len: 255}];
+}

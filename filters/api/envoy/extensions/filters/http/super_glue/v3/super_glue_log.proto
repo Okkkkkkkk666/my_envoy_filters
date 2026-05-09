@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package envoy.extensions.filters.http.super_glue.v3;
+
+import "udpa/annotations/status.proto";
+import "validate/validate.proto";
+
+option java_package = "io.envoyproxy.envoy.extensions.filters.http.super_glue.v3";
+option java_outer_classname = "SuperGlueProto";
+option java_multiple_files = true;
+option go_package = "git.ouryun.cn/base/envoy-go-proto/filters/api/envoy/extensions/filters/http/super_glue/v3;super_gluev3";
+option (udpa.annotations.file_status).package_version_status = ACTIVE;
+
+message Endpoint{
+  // true:健康，false:不健康
+  bool healthy = 1;
+  // ip:port
+  string local_address = 2;
+}
+
+message ClusterLog {
+  enum Act{
+    // 放行
+    ALLOW = 0;
+    // 拒绝
+    DENY = 1;
+  }
+  // 资源池名称
+  string cluster = 1 [(validate.rules).string = {min_len: 1}];
+  // ip+port
+  string address = 2 [(validate.rules).string = {min_len: 1}];
+  // 编排结果。
+  Act act = 3;
+  // 编排时间
+  uint32 timestamp = 4;
+  // 节点
+  repeated Endpoint endpoints = 5;
+}
+
+message SuperGlueLog {
+  enum Level {
+    // 虚拟主机级别
+    VH = 0;
+    // 路由级别
+    ROUTE = 1;
+  }
+
+  // 请求处理结果。 true：放行 false：拒绝
+  bool act = 1;
+  // 插件等级
+  Level level = 2;
+  // 安全资源名
+  repeated ClusterLog cluster = 3;
+}

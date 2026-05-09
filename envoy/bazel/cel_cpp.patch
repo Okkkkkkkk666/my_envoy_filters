@@ -1,0 +1,39 @@
+diff --git a/parser/parser.cc b/parser/parser.cc
+index 0fc1db4..4a17fce 100644
+--- a/parser/parser.cc
++++ b/parser/parser.cc
+@@ -924,6 +924,16 @@ antlrcpp::Any ParserVisitor::visitMapInitializerList(
+   return res;
+ }
+ 
++template<class ValueT>
++bool SimpleHexAtoi(const std::string& str, ValueT* value){
++  try {
++    *value = std::stoi(str, 0, 16);
++    return true;
++  } catch (...) {}
++
++  return false;
++}
++
+ antlrcpp::Any ParserVisitor::visitInt(CelParser::IntContext* ctx) {
+   std::string value;
+   if (ctx->sign) {
+@@ -932,7 +942,7 @@ antlrcpp::Any ParserVisitor::visitInt(CelParser::IntContext* ctx) {
+   value += ctx->tok->getText();
+   int64_t int_value;
+   if (absl::StartsWith(ctx->tok->getText(), "0x")) {
+-    if (absl::SimpleHexAtoi(value, &int_value)) {
++    if (SimpleHexAtoi(value, &int_value)) {
+       return sf_->NewLiteralInt(ctx, int_value);
+     } else {
+       return sf_->ReportError(ctx, "invalid hex int literal");
+@@ -953,7 +963,7 @@ antlrcpp::Any ParserVisitor::visitUint(CelParser::UintContext* ctx) {
+   }
+   uint64_t uint_value;
+   if (absl::StartsWith(ctx->tok->getText(), "0x")) {
+-    if (absl::SimpleHexAtoi(value, &uint_value)) {
++    if (SimpleHexAtoi(value, &uint_value)) {
+       return sf_->NewLiteralUint(ctx, uint_value);
+     } else {
+       return sf_->ReportError(ctx, "invalid hex uint literal");

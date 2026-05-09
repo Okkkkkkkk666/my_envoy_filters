@@ -1,0 +1,67 @@
+diff --git a/include/proxy-wasm/context.h b/include/proxy-wasm/context.h
+index f88b4aa..03fe5d2 100644
+--- a/include/proxy-wasm/context.h
++++ b/include/proxy-wasm/context.h
+@@ -26,10 +26,10 @@
+ #include <vector>
+ 
+ #include "include/proxy-wasm/context_interface.h"
++#include "proxy_wasm_common.h"
+ 
+ namespace proxy_wasm {
+ 
+-#include "proxy_wasm_common.h"
+ #include "proxy_wasm_enums.h"
+ 
+ class PluginHandleBase;
+diff --git a/include/proxy-wasm/context_interface.h b/include/proxy-wasm/context_interface.h
+index 841dd0e..8f61e53 100644
+--- a/include/proxy-wasm/context_interface.h
++++ b/include/proxy-wasm/context_interface.h
+@@ -25,9 +25,10 @@
+ #include <memory>
+ #include <vector>
+ 
++#include "proxy_wasm_common.h"
++
+ namespace proxy_wasm {
+ 
+-#include "proxy_wasm_common.h"
+ #include "proxy_wasm_enums.h"
+ 
+ using Pairs = std::vector<std::pair<std::string_view, std::string_view>>;
+diff --git a/include/proxy-wasm/wasm_api_impl.h b/include/proxy-wasm/wasm_api_impl.h
+index 8bd9626..e2d33b9 100644
+--- a/include/proxy-wasm/wasm_api_impl.h
++++ b/include/proxy-wasm/wasm_api_impl.h
+@@ -32,12 +32,12 @@
+ 
+ #include "include/proxy-wasm/exports.h"
+ #include "include/proxy-wasm/word.h"
++#include "proxy_wasm_common.h"
+ 
+ namespace proxy_wasm {
+ namespace null_plugin {
+ 
+ #include "proxy_wasm_enums.h"
+-#include "proxy_wasm_common.h"
+ 
+ #define WS(_x) Word(static_cast<uint64_t>(_x))
+ #define WR(_x) Word(reinterpret_cast<uint64_t>(_x))
+diff --git a/include/proxy-wasm/word.h b/include/proxy-wasm/word.h
+index e96fdfb..8d43f36 100644
+--- a/include/proxy-wasm/word.h
++++ b/include/proxy-wasm/word.h
+@@ -16,11 +16,9 @@
+ #pragma once
+ 
+ #include <iostream>
+-
+-namespace proxy_wasm {
+-
+ #include "proxy_wasm_common.h"
+ 
++namespace proxy_wasm {
+ // Represents a Wasm-native word-sized datum. On 32-bit VMs, the high bits are always zero.
+ // The Wasm/VM API treats all bits as significant.
+ struct Word {

@@ -1,0 +1,20 @@
+syntax = "proto3";
+package envoy.extensions.filters.http.api_check.v3;
+
+option java_package = "io.envoyproxy.envoy.extensions.filters.http.api_check.v3";
+option java_outer_classname = "ApiCheckProto";
+option java_multiple_files = true;
+option go_package = "git.ouryun.cn/base/envoy-go-proto/filters/api/envoy/extensions/filters/http/api_check/v3;api_checkv3";
+
+message ApiCheckLog {
+  //请求方法
+  string method = 1;
+  //通过的路由
+  string path = 2;
+  //请求参数
+  string param = 3;
+  //攻击来源ip
+  string downstream = 4;
+  // 触发的规则
+  repeated fixed64 rule_id = 5;
+}

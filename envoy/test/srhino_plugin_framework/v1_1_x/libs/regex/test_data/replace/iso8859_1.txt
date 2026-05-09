@@ -1,0 +1,4 @@
+china
+jpan
+this is china, we test iso8859-1 text.
+this is jpan, we test iso8859-1 text.

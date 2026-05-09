@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package envoy.extensions.filters.http.strong_global_ratelimit.v3;
+
+import "udpa/annotations/status.proto";
+
+import "filters/api/envoy/extensions/filters/http/strong_global_ratelimit/v3/strong_global_ratelimit.proto";
+
+option java_package = "io.envoyproxy.envoy.extensions.filters.http.strong_global_ratelimit.v3";
+option java_outer_classname = "StrongglobalRateLimitLog";
+option java_multiple_files = true;
+option go_package = "git.ouryun.cn/base/envoy-go-proto/filters/api/envoy/extensions/filters/http/strong_global_ratelimit/v3;strong_global_ratelimitv3";
+option (udpa.annotations.file_status).package_version_status = ACTIVE;
+
+message StrongGlobalRatelimitLog {
+
+  enum Act{
+    // 拒绝
+    REFUSE = 0;
+    // 仅记录
+    DRYRUN = 1;
+    // 放行
+    PASS = 2;
+  }
+
+  Act act = 1;
+
+  // 封禁时间
+  uint32 block_time = 2;
+
+  // 规则名称
+  string rule_name = 3;
+
+  // 配额
+  Quota quota = 4;
+
+  // 用户名(用户识别插件未开启，或已开启但未检测出用户名，则为空)
+  string user_name = 5;
+
+  // 配额作用域
+  Action.Target target = 6;
+}

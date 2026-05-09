@@ -1,0 +1,130 @@
+syntax = "proto3";
+
+package srhino_plugin_framework.v1_2_x.proto.database.central_database;
+
+import "validate/validate.proto";
+
+service CentralDatabaseService {
+  rpc Insert(InsertRequest) returns (InsertResponse) {
+  }
+
+  rpc Delete(DeleteRequest) returns (DeleteResponse) {
+  }
+
+  rpc Get(GetRequest) returns (GetResponse) {
+  }
+
+  rpc Update(UpdateRequest) returns (UpdateResponse) {
+  }
+
+  rpc Clean(CleanRequest) returns (CleanResponse) {
+  }
+}
+
+// 插入请求
+message InsertRequest {
+  // 命名空间
+  string namespace = 1;
+  // 插入的key
+  string key = 2 [(validate.rules).string = {min_len: 1 max_len: 255}];
+  // 自定义回传数据
+  uint64 user_data = 3;
+  
+  // 当key存在且未失效时是否强制覆盖
+  bool force = 4;
+  // 插入的value
+  bytes value = 5 [(validate.rules).bytes = {min_len: 1}];
+  // 有效时间，单位秒。当为0时，则永久有效。
+  uint32 ttl = 6;
+}
+
+// 插入回复
+message InsertResponse {
+  // 插入结果，0-失败、1-成功
+  int32 result = 1;
+  // 自定义回传数据
+  uint64 user_data = 2;
+}
+
+// 删除请求
+message DeleteRequest {
+  // 命名空间
+  string namespace = 1;
+  // 删除的key
+  string key = 2 [(validate.rules).string = {min_len: 1 max_len: 255}];
+  // 自定义回传数据
+  uint64 user_data = 3;
+}
+
+// 删除回复
+message DeleteResponse {
+  // 删除结果，0-失败、1-成功
+  int32 result = 1;
+  // 自定义回传数据
+  uint64 user_data = 2;
+}
+
+// 获取请求
+message GetRequest {
+  // 命名空间
+  string namespace = 1;
+  // 获取的key
+  string key = 2 [(validate.rules).string = {min_len: 1 max_len: 255}];
+  // 自定义回传数据
+  uint64 user_data = 3;
+
+  // 如果长度不为0则指定的key不存在时插入此值
+  bytes value = 5;
+  // 插入时指定有效时间，单位秒。当为0时，则永久有效。
+  uint32 ttl = 6;
+}
+
+// 获取响应
+message GetResponse {
+  // 获取结果，0-失败、1-获取成功、2-插入成功
+  int32 result = 1;
+  // 自定义回传数据
+  uint64 user_data = 2; 
+
+  // 获取的值
+  bytes value = 3;  
+}
+
+// 更新请求
+message UpdateRequest {
+  // 命名空间
+  string namespace = 1;
+  // 更新的key
+  string key = 2 [(validate.rules).string = {min_len: 1 max_len: 255}];
+  // 自定义回传数据
+  uint64 user_data = 3;   
+
+  // 更新的值
+  bytes value = 4 [(validate.rules).bytes = {min_len: 1}];
+  // 更新后值的有效时间，单位秒。当为0时，则永久有效。
+  uint32 ttl = 5;
+}
+
+// 更新响应
+message UpdateResponse {
+  // 更新结果，0-失败、1-成功
+  int32 result = 1;
+  // 自定义回传数据
+  uint64 user_data = 2; 
+}
+
+// 清空请求
+message CleanRequest {
+  // 命名空间
+  string namespace = 1;
+  // 自定义回传数据
+  uint64 user_data = 2; 
+}
+
+// 清空响应
+message CleanResponse {
+  // 清空结果，0-失败、1-成功
+  int32 result = 1;
+  // 自定义回传数据
+  uint64 user_data = 2; 
+}

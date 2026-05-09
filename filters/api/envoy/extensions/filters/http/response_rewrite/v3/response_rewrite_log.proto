@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package envoy.extensions.filters.http.response_rewrite.v3;
+
+import "validate/validate.proto";
+
+option java_package = "io.envoyproxy.envoy.extensions.filters.http.response_rewrite.v3";
+option java_outer_classname = "ResponseRewriteLog";
+option java_multiple_files = true;
+option go_package = "git.ouryun.cn/base/envoy-go-proto/filters/api/envoy/extensions/filters/http/response_rewrite/v3;response_rewritev3";
+
+message ResponseRewriteLog {
+  enum Action {
+    PASS = 0;//没重写
+    REWRITE = 1;//重写
+  }
+message pattern {
+    // 敏感类型名称
+    string sensitive_name=1;
+    // 字段名称
+    string field_name = 2;
+    // 脱敏后的内容
+    string rewrite_data = 3;
+    // 脱敏策略名称
+    string rewrite_strategy_name = 4;
+  }
+  // 重写还是没重写
+  int32 act = 1 [(validate.rules).int32 = {gte: 0, lte: 1}];
+  //匹配规则重写的
+  repeated pattern matched_patterns = 2;
+  // 脱敏时间
+  uint32 time = 3;
+  // 业务IP或域名
+  string downstream = 4;
+  // 脱敏条数
+  uint32 sanitized_data_count = 5;
+}
+

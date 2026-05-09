@@ -1,0 +1,103 @@
+syntax = "proto3";
+
+package envoy.extensions.filters.http.anti_cc.v3;
+
+import "envoy/config/core/v3/grpc_service.proto";
+
+import "validate/validate.proto";
+import "udpa/annotations/status.proto";
+import "google/protobuf/duration.proto";
+
+import "filters/api/envoy/extensions/filters/http/common/ip_whitelist/v3/ip_whitelist.proto";
+
+option java_package = "io.envoyproxy.envoy.extensions.filters.http.anti_cc.v3";
+option java_outer_classname = "AntiCCProto";
+option java_multiple_files = true;
+option go_package = "git.ouryun.cn/base/envoy-go-proto/filters/api/envoy/extensions/filters/http/anti_cc/v3;anti_ccv3";
+option (udpa.annotations.file_status).package_version_status = ACTIVE;
+
+// 配额 
+message Quota { 
+
+  // 时间段，单位秒 
+  uint32 duration = 1; 
+
+  // 在一个duration内最多允许多少次访问 
+  uint32 max_count = 2; 
+}
+
+// 防护动作
+message Action{
+  
+  // 空转
+  bool dryrun = 1;
+
+  // 人机验证
+  bool  man_machine_verification = 2;
+
+  // 一直开启人机验证
+  bool all_run_verification = 3;
+
+  // 限速频率
+  Quota rate_limit_quota = 4;
+
+  // 人机验证失败频率
+  Quota check_quota = 5;
+
+  // 封禁时间
+  uint32 block_time = 6;
+}
+
+enum Mode{
+
+  // 自动模式
+  AUTO = 0;
+
+  // 紧急模式
+  EMERGENCY = 1;
+
+  // 自定义模式
+  CUSTOM = 2;
+}
+
+enum AutoLevel{
+
+  // 宽松
+  LOW = 0;
+
+  // 中等
+  MEDIUM = 1;
+
+  // 严格
+  HIGH = 2;
+}
+
+message HttpService{
+  string cluster_name = 1 [(validate.rules).string = {min_len: 1}];
+
+  google.protobuf.Duration timeout = 2;
+}
+
+message AntiCCGlobal{
+  
+  // 开启模式
+  Mode mode = 1;
+
+  // 防护等级
+  AutoLevel auto_level = 2;
+
+  // 防护动作
+  Action action = 3;
+  
+  // 白名单
+  repeated envoy.extensions.filters.http.common.ip_whitelist.v3.IpWhitelist ip_whitelist = 4 [(validate.rules).repeated = {max_items: 256}];
+
+  // 外部gRPC服务
+  envoy.config.core.v3.GrpcService external_grpc_server = 5 [(validate.rules).message = {required: true}];
+
+  // 验证服务
+  HttpService verification_server = 6;
+
+  // polycube
+  HttpService polycube_server = 7 ;
+}

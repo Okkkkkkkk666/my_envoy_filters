@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package srhino_plugin_framework.v1_4_x.proto.manifest.resource;
+
+import "validate/validate.proto";
+
+message Listener {
+  string address = 1 [(validate.rules).string = {ipv4: true}];
+  int32 port = 2;
+  string cluster = 3 [(validate.rules).string = {max_len: 1}];
+  string certificate_chain = 4;
+  string private_key = 5;
+}

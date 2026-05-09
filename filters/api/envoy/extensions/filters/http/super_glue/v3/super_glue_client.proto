@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package envoy.extensions.filters.http.super_glue.v3;
+
+import "google/protobuf/duration.proto";
+import "udpa/annotations/status.proto";
+import "validate/validate.proto";
+import "envoy/config/core/v3/address.proto";
+import "envoy/type/v3/percent.proto";
+import "filters/api/envoy/extensions/filters/http/common/strong_matcher/v3/matcher.proto";
+
+option java_package = "io.envoyproxy.envoy.extensions.filters.http.super_glue.v3";
+option java_outer_classname = "SuperGlueProto";
+option java_multiple_files = true;
+option go_package = "git.ouryun.cn/base/envoy-go-proto/filters/api/envoy/extensions/filters/http/super_glue/v3;super_gluev3";
+option (udpa.annotations.file_status).package_version_status = ACTIVE;
+
+message Rule {
+  oneof from {
+    config.core.v3.CidrRange src_ip = 1 [deprecated = true];
+    extensions.filters.http.common.strong_matcher.v3.IpSet ip_list = 2 [deprecated = true];
+  }
+
+  // IP条件是否取反
+  bool ip_invert = 3 [deprecated = true];
+  repeated extensions.filters.http.common.strong_matcher.v3.Matcher matchers = 4 [(validate.rules).repeated = {max_items: 256}];
+  string upstream = 5 [deprecated = true];
+  // 规则名称
+  string rule_name = 6;
+  // 启用
+  bool enable = 7;
+}
+
+message Cluster {
+  // 资源池名称
+  string cluster = 1 [(validate.rules).string = {min_len: 1}];
+  // true：放行，false：拒绝
+  bool unhealthy_bypass = 2;
+  // true：放行，false：拒绝
+  bool timeout_bypass = 3;
+  // 发送到第三方应用每个请求的超时时间。默认1秒。
+  google.protobuf.Duration request_timeout = 4;
+}
+
+message SuperGlueClientRoute {
+  repeated Cluster cluster_list = 1 [(validate.rules).repeated = {max_items: 256}];
+  // 状态。true:启用，false：禁用，已弃用
+  bool enable = 2 [deprecated = true];
+  // 流量源配置
+  repeated Rule rules = 3 [(validate.rules).repeated = {max_items: 256}];
+  // 编排比例
+  type.v3.FractionalPercent percent = 4;
+}
+
+message SuperGlueClientGlobal {
+}

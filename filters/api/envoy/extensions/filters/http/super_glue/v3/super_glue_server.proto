@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package envoy.extensions.filters.http.super_glue.v3;
+
+
+import "udpa/annotations/status.proto";
+
+option java_package = "io.envoyproxy.envoy.extensions.filters.http.super_glue.v3";
+option java_outer_classname = "SuperGlueProto";
+option java_multiple_files = true;
+option go_package = "git.ouryun.cn/base/envoy-go-proto/filters/api/envoy/extensions/filters/http/super_glue/v3;super_gluev3";
+option (udpa.annotations.file_status).package_version_status = ACTIVE;
+
+message SuperGlueServerGlobal {
+}
+
+message SuperGlueServerRoute {
+}
+
+

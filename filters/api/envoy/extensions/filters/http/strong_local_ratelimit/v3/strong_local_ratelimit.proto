@@ -1,0 +1,115 @@
+syntax = "proto3";
+
+package envoy.extensions.filters.http.strong_local_ratelimit.v3;
+
+import "envoy/config/core/v3/address.proto";
+import "envoy/config/route/v3/route_components.proto";
+import "filters/api/envoy/extensions/filters/http/common/strong_matcher/v3/matcher.proto";
+
+import "udpa/annotations/status.proto";
+import "validate/validate.proto";
+
+option java_package = "io.envoyproxy.envoy.extensions.filters.http.strong_local_ratelimit.v3";
+option java_outer_classname = "StrongLocalRateLimitProto";
+option java_multiple_files = true;
+option go_package = "git.ouryun.cn/base/envoy-go-proto/filters/api/envoy/extensions/filters/http/strong_local_ratelimit/v3;strong_local_ratelimitv3";
+option (udpa.annotations.file_status).package_version_status = ACTIVE;
+
+// 流量配额
+message Quota {
+  // 时间段，单位秒
+  uint32 duration = 1;
+
+  // 在一个duration内最多允许多少次访问
+  uint32 max_count = 2;
+}
+
+// 限速动作
+// [#next-free-field: 6]
+message Action {
+  // 顺利通过限流后的下一步动作
+  enum AfterPass {
+    // 结束当前流控插件处理逻辑，进入下一个插件处理
+    RETURN = 0;
+
+    // 继续下一条规则
+    NEXT_RULE = 1;
+  }
+
+  // 配额作用域
+  enum Target {
+    // 所有访问来源共享配额
+    ALL = 0;
+
+    // 每个IP一个配额
+    IP = 1;
+
+    // 指定HTTP头的不同值，拥有不同配额
+    HEADER = 2;
+
+    // 相同用户共享一组配额
+    USER= 3;
+  }
+
+  // 流量配额
+  repeated Quota quotas = 1 [(validate.rules).repeated = {max_items: 2}];
+
+  // 流量配额作用域
+  Target target = 2 [(validate.rules).enum = {defined_only: true}];
+
+  // 若配额作用为HTTP头，则需指明是哪个头
+  config.route.v3.HeaderMatcher header = 3;
+
+  // 是否空转
+  bool dryrun = 4;
+
+  // 顺利通过限流后的下一步动作
+  AfterPass after_pass = 5 [(validate.rules).enum = {defined_only: true}];
+}
+
+// 限速规则
+// [#next-free-field: 7]
+message Rule {
+  // 规则名称
+  string rule_name = 1;
+
+  // 启用
+  bool enable = 2;
+
+  repeated extensions.filters.http.common.strong_matcher.v3.Matcher condition = 3 [(validate.rules).repeated = {max_items: 256}];
+
+  Action action = 4;
+
+  // 源IP。已废弃
+  oneof from {
+    config.core.v3.CidrRange src_ip = 5 [deprecated = true];
+
+    extensions.filters.http.common.strong_matcher.v3.IpSet ip_list = 6 [deprecated = true];
+  }
+  // IP条件是否取反
+  bool ip_invert =7 [deprecated = true];
+
+  repeated uint32 route_id = 8 [(validate.rules).repeated = {max_items: 256}, deprecated = true];
+ 
+  string upstream = 9 [(validate.rules).string = {max_len: 128}, deprecated = true];
+}
+
+// [#protodoc-title: StrongLocalRateLimitRoute]
+// StrongLocalRateLimitRoute :ref:`configuration overview <config_http_filters_strong_local_ratelimit>`.
+// [#extension: envoy.filters.http.strong_local_ratelimit]
+// [#extension-category: envoy.filters.http.strong_local_ratelimit.extension.category]
+message StrongLocalRateLimitRoute {
+
+  // 规则
+  repeated Rule rules = 1 [(validate.rules).repeated = {max_items: 256}];
+
+  // 路由规则是否启用，仅为控制面序列化使用，禁用则不下发，数据面不用处理
+  bool enable = 2;
+
+  // 空转。已废弃
+  bool dryrun = 3 [deprecated = true];
+}
+
+message StrongLocalRateLimitGlobal {
+}
+

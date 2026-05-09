@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package srhino_plugin_framework.v1_0_x.proto.manifest.resource;
+
+import "validate/validate.proto";
+
+// 文件资源
+message File {
+  // 文件路径
+  string path = 1 [(validate.rules).string = {min_len: 1}];
+  // 文件的sha256sum
+  string sha256 = 2 [(validate.rules).string = {len: 64}];
+  // 指定不同版本的插件是否共享此文件。如果为false则，不同版本的插件拥有不同副本。
+  // bool shared = 3;
+}

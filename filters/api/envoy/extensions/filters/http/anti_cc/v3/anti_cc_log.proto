@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package envoy.extensions.filters.http.anti_cc.v3;
+
+import "udpa/annotations/status.proto";
+
+import "filters/api/envoy/extensions/filters/http/anti_cc/v3/anti_cc.proto";
+
+
+option java_package = "io.envoyproxy.envoy.extensions.filters.http.anti_cc.v3";
+option java_outer_classname = "AntiCCProto";
+option java_multiple_files = true;
+option go_package = "git.ouryun.cn/base/envoy-go-proto/filters/api/envoy/extensions/filters/http/anti_cc/v3;anti_ccv3";
+option (udpa.annotations.file_status).package_version_status = ACTIVE;
+
+
+enum Act{ 
+  
+  // 空值，无意义，占位
+  UNKNOW = 0;
+
+  // 拒绝
+  REFUSE = 1;
+
+  // 放行
+  PASS = 2;
+
+  // 人机验证通过
+  VERIFY_PASS = 3;
+
+  // 人机验证失败
+  VERIFY_FAILURE = 4;
+}
+  
+message AntiCCLog {
+
+  // 请求方法
+  string method = 1;
+
+  // 频次
+  Quota quota = 2;
+
+  // 动作
+  Act act = 3;
+
+  // 封禁时间
+  uint32 block_time = 4;
+
+  // 当前黑名单数
+  uint32 block_count = 5;
+}

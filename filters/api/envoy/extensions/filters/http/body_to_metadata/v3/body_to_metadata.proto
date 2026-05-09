@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package envoy.extensions.filters.http.body_to_metadata.v3;
+
+import "filters/api/envoy/extensions/filters/http/common/strong_matcher/v3/matcher.proto";
+import "udpa/annotations/status.proto";
+import "validate/validate.proto";
+
+import "google/protobuf/wrappers.proto";
+
+option java_package = "io.envoyproxy.envoy.extensions.filters.http.body_to_metadata.v3";
+option java_outer_classname = "AclProto";
+option java_multiple_files = true;
+option go_package = "git.ouryun.cn/base/envoy-go-proto/filters/api/envoy/extensions/filters/http/body_to_metadata/v3;body_to_metadatav3";
+option (udpa.annotations.file_status).package_version_status = ACTIVE;
+
+// body记录规则
+message Rule {
+  // body的最大字节数，超过此值的body将不会被记录，如果不指定此值则不做限制
+  google.protobuf.UInt32Value max_body_bytes = 1 [(validate.rules).uint32 = {gt: 0}];
+
+  // 匹配条件。所有条件匹配成功才进行请求body记录，如果不指定则视为匹配成功
+  repeated extensions.filters.http.common.strong_matcher.v3.Matcher matchers = 2;
+}
+
+message BodyToMetadataGlobal {
+  // 请求body记录规则，如果不存在则不记录请求body
+  Rule request_rule = 1;
+  
+  // 响应body记录规则，如果不存在则不记录响应body
+  Rule response_rule = 2;
+}
