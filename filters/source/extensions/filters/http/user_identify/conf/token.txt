@@ -1,0 +1,8 @@
+known_sign_in
+token
+session-id
+cookie
+session
+login
+signin
+session_key

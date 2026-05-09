@@ -1,0 +1,27 @@
+name: 构建流水线
+on:
+  push:
+    branches:
+      - 'master'
+
+jobs:
+  build:
+    runs-on: ubuntu-envoy-v1
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+      - name: 执行构建
+        run: |
+          ./build-release-cicd.sh
+          echo "构建状态: ${{ job.status }}"  
+  build_arm64:
+    runs-on: ubuntu-20.04-arm64-v1  
+    container:
+      image: registry.sr.ok/srhino-cpp/envoy-kylin-v10sp2-arm64:v1.7
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+      - name: 执行构建
+        run: |
+          ./build-release-cicd.sh
+          echo "构建状态: ${{ job.status }}"

@@ -1,0 +1,115 @@
+name: 发布流水线
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-*'
+
+jobs:
+  release:
+    runs-on: ubuntu-envoy-v1
+    container:
+      image: registry.sr.ok/srhino-cpp/envoy-ubuntu20.04-x86_64:v8
+    steps:
+      - name: 并发控制检查
+        run: |
+          RUNNING_COUNT=$(curl -s "${{ gitea.server_url }}/api/v1/repos/${{ gitea.repository }}/actions/tasks?page=1&limit=20&token=${{ secrets.CLONE_TOKEN }}" \
+          | jq -r '.workflow_runs[] | select(.status == "running") | select(.name == "release") | .id'| wc -l)
+          echo "${{ gitea.repository }} 的 release.yaml 有 ${RUNNING_COUNT} 个 Runner 正在运行" 
+          if [ ${RUNNING_COUNT} -gt 1 ]; then
+            echo "检测到已经有运行中的任务，当前任务退出"
+            exit 1
+          fi
+      - name: 检出代码
+        uses: actions/checkout@v4
+      - name: 获取分支
+        id: br
+        run: |
+          set -x
+          git fetch --all --no-tags --prune --depth=1
+          branch=$(git branch -r --points-at ${{ gitea.sha }} | head -1 | sed 's/\s*HEAD\s*->//;s#\s*origin/##g')
+          echo "trigger_branch=${branch}" >> $GITHUB_OUTPUT
+          echo "trigger_at=$(date '+%F %T')" >> $GITHUB_OUTPUT
+      - name: 执行构建
+        run: |
+          ./build-release-cicd.sh pkg
+          echo "构建状态: ${{ job.status }}"
+      - name: 上传流量引擎
+        uses: actions/release-action@main
+        with:
+          api_key: '${{ secrets.GITEA_TOKEN }}'
+          files: |-
+            envoy-*.tar.gz
+      - name: 上传框架依赖
+        uses: actions/release-action@main
+        with:
+          api_key: '${{ secrets.GITEA_TOKEN }}'
+          files: |-
+            srhino_framework_pkg_*.tar.gz
+      - name: 上传导出lib库
+        uses: actions/release-action@main
+        with:
+          api_key: '${{ secrets.GITEA_TOKEN }}'
+          files: |-
+            plugins/libs/*.so
+      - name: 创建/更新发布
+        uses: actions/release-action@main
+        with:
+          token: '${{ secrets.GITEA_TOKEN }}'
+          pre_release:
+          body: |
+            > 本包由 @${{ gitea.actor }} 创建 @${{ gitea.triggering_actor }} 在`${{ steps.br.outputs.trigger_at }}`基于[${{ steps.br.outputs.trigger_branch }}](/src/branch/${{ steps.br.outputs.trigger_branch }})分支发布
+  release_arm64:
+    runs-on: ubuntu-20.04-arm64-v1
+    if: ${{ contains(gitea.ref_name, '-rc') || !(contains(gitea.ref_name, '-alpha') || contains(gitea.ref_name, '-beta') || contains(gitea.ref_name, '-pre') || contains(gitea.ref_name, '-rc')) }}
+    container:
+      image: registry.sr.ok/srhino-cpp/envoy-kylin-v10sp2-arm64:v1.8
+    steps:
+      - name: 并发控制检查
+        run: |
+          RUNNING_COUNT=$(curl -s "${{ gitea.server_url }}/api/v1/repos/${{ gitea.repository }}/actions/tasks?page=1&limit=20&token=${{ secrets.CLONE_TOKEN }}" \
+          | grep -o '"name":"release_arm64"[^}]*"status":"running"' | wc -l)
+          echo "${{ gitea.repository }} 的 release_arm64.yaml 有 ${RUNNING_COUNT} 个 Runner 正在运行"
+          if [ ${RUNNING_COUNT} -gt 1 ]; then
+            echo "检测到已经有运行中的任务，当前任务退出"
+            exit 1
+          fi
+      - name: 检出代码
+        uses: actions/checkout@v4
+      - name: 获取分支
+        id: br
+        run: |
+          set -x
+          git fetch --all --no-tags --prune --depth=1
+          branch=$(git branch -r --points-at ${{ gitea.sha }} | head -1 | sed 's/\s*HEAD\s*->//;s#\s*origin/##g')
+          echo "trigger_branch=${branch}" >> $GITHUB_OUTPUT
+          echo "trigger_at=$(date '+%F %T')" >> $GITHUB_OUTPUT
+      - name: 执行构建
+        run: |
+          ./build-release-cicd.sh pkg
+          echo "构建状态: ${{ job.status }}"
+      - name: 上传流量引擎
+        uses: actions/release-action@main
+        with:
+          api_key: '${{ secrets.GITEA_TOKEN }}'
+          files: |-
+            envoy-*.tar.gz
+      - name: 上传框架依赖
+        uses: actions/release-action@main
+        with:
+          api_key: '${{ secrets.GITEA_TOKEN }}'
+          files: |-
+            srhino_framework_pkg_*.tar.gz
+      - name: 上传导出lib库
+        uses: actions/release-action@main
+        with:
+          api_key: '${{ secrets.GITEA_TOKEN }}'
+          files: |-
+            plugins/libs/*.so
+      - name: 创建/更新发布
+        uses: actions/release-action@main
+        with:
+          token: '${{ secrets.GITEA_TOKEN }}'
+          pre_release:
+          body: |
+            > 本包由 @${{ gitea.actor }} 创建 @${{ gitea.triggering_actor }} 在`${{ steps.br.outputs.trigger_at }}`基于[${{ steps.br.outputs.trigger_branch }}](/src/branch/${{ steps.br.outputs.trigger_branch }})分支发布            

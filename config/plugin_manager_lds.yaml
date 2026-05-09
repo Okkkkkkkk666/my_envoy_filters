@@ -1,0 +1,100 @@
+resources:
+- "@type": type.googleapis.com/envoy.config.listener.v3.Listener
+  name: listener_0
+    # freebind: true
+  address:
+    socket_address:
+      address: 172.28.37.223
+      port_value: 1000
+  filter_chains:
+  - filters:
+    - name: envoy.filters.network.http_connection_manager
+      typed_config:
+        "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+        stat_prefix: ingress_http
+        access_log:
+          - name: envoy.access_loggers.stdout
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+
+        http_filters:
+        - name: envoy.filters.http.body-to-metadata.1.0
+          typed_config:
+            '@type': type.googleapis.com/envoy.extensions.filters.http.body_to_metadata.v3.BodyToMetadataGlobal
+            request_rule:
+              max_body_bytes: 104857600
+        # - name: envoy.filters.http.cors
+        #   typed_config:
+        #     '@type': type.googleapis.com/envoy.config.route.v3.CorsPolicy
+        - name: envoy.filters.http.lua
+          typed_config:
+            '@type': type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
+            inline_code: |
+              function envoy_on_request(request_handle)
+                request_handle:headers():add("sr-vsmatched","false");
+              end
+
+        - name: envoy.extensions.common.matching.v3.ExtensionWithMatcher
+          typed_config:
+            '@type': type.googleapis.com/envoy.extensions.common.matching.v3.ExtensionWithMatcher
+            extension_config:
+              name: envoy.extensions.filters.http.composite.v3.Composite
+              typed_config:
+                '@type': type.googleapis.com/envoy.extensions.filters.http.composite.v3.Composite
+            xds_matcher:
+              matcher_list:
+                matchers:
+                  - predicate:
+                      and_matcher:
+                        predicate:
+                          - single_predicate:
+                              input:
+                                name: envoy.type.matcher.v3.HttpRequestHeaderMatchInput
+                                typed_config:
+                                  '@type': type.googleapis.com/envoy.type.matcher.v3.HttpRequestHeaderMatchInput
+                                  header_name: sr-vsmatched
+                              value_match:
+                                prefix: "false"
+                          - single_predicate:
+                              input:
+                                name: envoy.type.matcher.v3.HttpRequestHeaderMatchInput
+                                typed_config:
+                                  '@type': type.googleapis.com/envoy.type.matcher.v3.HttpRequestHeaderMatchInput
+                                  header_name: host
+                              value_match:
+                                exact: 172.28.37.223:1000
+                    on_match:
+                      action:
+                        name: envoy.extensions.filters.http.composite.v3.ExecuteFilterAction
+                        typed_config:
+                          '@type': type.googleapis.com/envoy.extensions.filters.http.composite.v3.ExecuteFilterAction
+                          typed_config:
+                            name: www.srhino.com.application-acl.so.1.1.0.instance1
+                            typed_config:
+                              "@type": type.googleapis.com/envoy.extensions.filters.http.srhino_plugin_loader.v3.SrhinoPluginLoaderGlobal
+                              plugin_file_name: www.srhino.com.application-acl.so.1.1.0
+                              config:
+
+        - name: envoy.filters.http.lua
+          typed_config:
+            '@type': type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
+            inline_code: |
+              function envoy_on_request(request_handle)
+                request_handle:headers():remove("sr-vsmatched");
+              end
+
+        - name: envoy.filters.http.body-to-metadata.1.0
+          typed_config:
+            '@type': type.googleapis.com/envoy.extensions.filters.http.body_to_metadata.v3.BodyToMetadataGlobal
+            response_rule:
+              max_body_bytes: 104857600
+
+        - name: envoy.filters.http.router
+          typed_config:
+            '@type': type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+            suppress_envoy_headers: true
+
+        rds:
+          route_config_name: local_route
+          config_source:
+            path: /root/envoy-filters/config/resources_route.yaml

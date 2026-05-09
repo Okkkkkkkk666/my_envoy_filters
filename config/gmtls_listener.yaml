@@ -1,0 +1,261 @@
+resources:
+- "@type": type.googleapis.com/envoy.config.listener.v3.Listener
+  name: listener_0
+    # freebind: true
+  address:
+    socket_address:
+      address: 0.0.0.0
+      port_value: 1000
+  listener_filters:
+    - name: envoy.filters.listener.tls_inspector
+      typed_config:
+        "@type": type.googleapis.com/envoy.extensions.filters.listener.tls_inspector.v3.TlsInspector
+        enable_ja3_fingerprinting: true
+  filter_chains:
+  - filter_chain_match:
+      transport_protocol: tls
+
+    transport_socket:
+      name: "envoy.transport_sockets.tls"
+      typed_config:
+        "@type": "type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext"
+        #require_client_certificate: true # 双向认证
+        #session_timeout: 7200s
+        common_tls_context:          
+          alpn_protocols: [
+              #不打开tls1.3就不要打开h2，否则浏览器报错
+              #"h2,http/1.1",
+              "http/1.1"
+          ]
+          tls_params:
+            tls_minimum_protocol_version: "TLSv1_0"
+            tls_maximum_protocol_version: "TLSv1_2"
+          #   cipher_suites: [
+          #     "TLS_RSA_WITH_AES_128_CBC_SHA",
+          #     "TLS_RSA_WITH_AES_256_CBC_SHA",
+          #     "TLS_PSK_WITH_AES_128_CBC_SHA",
+          #     "TLS_PSK_WITH_AES_256_CBC_SHA",
+          #     "TLS_RSA_WITH_AES_128_GCM_SHA256",
+          #     "TLS_RSA_WITH_AES_256_GCM_SHA384",
+          #     "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+          #     "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
+          #     "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
+          #     "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
+          #     "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+          #     "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
+          #     "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
+          #     "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
+          #     "TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA",
+          #     "TLS_ECDHE_PSK_WITH_AES_256_CBC_SHA",
+          #     "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256",
+          #     "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256",
+          #     "TLS_ECDHE_PSK_WITH_CHACHA20_POLY1305_SHA256",
+          #   ]
+            cipher_suites: [
+              "RSA_SM4_CBC_SHA256",
+              "RSA_SM4_CBC_SM3",
+              "ECC_SM2_SM4_CBC_SM3",
+              "ECDHE_SM2_SM4_CBC_SM3",
+              "ECC_SM2_SM4_GCM_SM3",
+              "ECDHE_SM2_SM4_GCM_SM3",
+              "RSA_SM4_GCM_SHA256",
+              "RSA_SM4_GCM_SM3",
+            ]
+
+            ecdh_curves: ["X25519", "P-256"]
+          # # rsa
+          # tls_certificates:
+          # - certificate_chain:
+          #     inline_string: |
+          #       -----BEGIN CERTIFICATE-----
+          #       MIIDQzCCAisCFCWzaFURPaocaCkqQr/HLP9l8yt/MA0GCSqGSIb3DQEBCwUAMFwx
+          #       CzAJBgNVBAYTAkNOMRAwDgYDVQQIDAdCZWlqaW5nMRAwDgYDVQQHDAdCZWlqaW5n
+          #       MQ0wCwYDVQQKDARUZXN0MQ0wCwYDVQQLDARUZXN0MQswCQYDVQQDDAJDQTAeFw0y
+          #       NTEwMjcwODMyMzBaFw0zNTEwMjUwODMyMzBaMGAxCzAJBgNVBAYTAkNOMRAwDgYD
+          #       VQQIDAdCZWlqaW5nMRAwDgYDVQQHDAdCZWlqaW5nMQ0wCwYDVQQKDARUZXN0MQ0w
+          #       CwYDVQQLDARUZXN0MQ8wDQYDVQQDDAZzZXJ2ZXIwggEiMA0GCSqGSIb3DQEBAQUA
+          #       A4IBDwAwggEKAoIBAQDsA3DtjzduokBzqVq1/Ury+zuZKE4JNhANsWLoyXqxi1n5
+          #       gVgMgyX9nuIhyvqwPMsJ8LzqvsXiY9NEracIox3krG4uVFhpbH6GMv/80NxIgJMK
+          #       91mRCO79N1RmL5dSaDgXBj/inWUAwjgNFMqk+msvAkZ7zgaKWY2QRdJE+HwBLCRi
+          #       hgrHQHlmhLSWyX/c3FYe4dg9yo7he1gw4zmINfLAV7Y65hrFzWWGMmy+MuLxfJG3
+          #       UxNzS7EFc/yw6vbvv4W+SYpAU+E/j/2tZDARnKXmih5ZKDCrwwN4OaJnKE4vhnXu
+          #       KI3AFhzinAdPWvSQyjuDzv1sSLIKtSdKeW5zz26LAgMBAAEwDQYJKoZIhvcNAQEL
+          #       BQADggEBABQU04pnmXz258eU6+NraC5ucYPHXHDVzrt4Rm0zoN+ktTwe70SrEiQc
+          #       +q/hE+dRWjiGKga9xn52ITcQPyIOshEoC049qTFq/L+m0yKJaYdENdOTCyQskpyh
+          #       S12rbIr8MZysJSAQJweJB0iJAZGzelb77vb3q+haXNxwuKBDofA+IzOyapDWKIxC
+          #       dpqwBUDvuQjQoQAtff7NtyFl9unOXQsfRWUewPMobfM1+SvD1oFFsTi/r3UfXmqB
+          #       oclwNbeNMRdjvU0gYbg+YGKJhC6vB/cuoKH1BtPdlVViY8VvYEAjWR5qIsp8RCFN
+          #       kNjO8WuxGU6bCgE/WwXhGfo+CO9rq3I=
+          #       -----END CERTIFICATE-----
+
+
+
+          #   private_key:
+          #     inline_string: |
+          #       -----BEGIN PRIVATE KEY-----
+          #       MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDsA3DtjzduokBz
+          #       qVq1/Ury+zuZKE4JNhANsWLoyXqxi1n5gVgMgyX9nuIhyvqwPMsJ8LzqvsXiY9NE
+          #       racIox3krG4uVFhpbH6GMv/80NxIgJMK91mRCO79N1RmL5dSaDgXBj/inWUAwjgN
+          #       FMqk+msvAkZ7zgaKWY2QRdJE+HwBLCRihgrHQHlmhLSWyX/c3FYe4dg9yo7he1gw
+          #       4zmINfLAV7Y65hrFzWWGMmy+MuLxfJG3UxNzS7EFc/yw6vbvv4W+SYpAU+E/j/2t
+          #       ZDARnKXmih5ZKDCrwwN4OaJnKE4vhnXuKI3AFhzinAdPWvSQyjuDzv1sSLIKtSdK
+          #       eW5zz26LAgMBAAECggEAJeatkXDQ4ZLrz8cwGo65JQkkeoWG9qK4dEJ61FBaxD1R
+          #       LyjO13+OL8r+nJeop3mzz35aEEafp6oJSPusGc58I/du4EDKS+/Q58Mz6ckuvvPq
+          #       6TVsrEZnfsGOa7ST0/eJnmTyCHXnPPZzouImYtUWNl/iqsocscYM3lDgIhRXcaZy
+          #       pKr5lJdOz0IIP22fxTyZuFNPY2MW3h/+FzwhwGtf5bEPJj9+7m85wJPokd1oGg38
+          #       8+CBL+OJWHrkfo6IGMkF7BWe7xukVBtfqHqGw2ylYVCHmp0GvMSvmr2ZUUEId0nb
+          #       JgruwiKtLJF5DytHo9PPIVdSD3kVVnjM1kMM69O2PQKBgQD1GJii5urv8aKJMLdd
+          #       XStAWa8x+xL3D5VFPZk7n9B/2iYRt6OcuesNonUe1NFMzEQD+jOiBalhcnXmldX+
+          #       wp1iB+rU+DD2tOn9tfU1jaxhP/Ubq9YDSSFUvQzYWH401is/5+yY+JPqvJX9WaXb
+          #       ToQfS0eBJmq5jWhtS1GFtD4VhQKBgQD2g2cOpDH9UsKuhO3f7UZ/We1q55+jwgS3
+          #       np+NcZHL2eYrI8JosQRt2/CNRP+07bkbW4XlIP7GCFnZmb/hMcOijFxr1E1/Skgd
+          #       O21kQP0H7SL37Bk869iiTaNeSuH0RWovIYMGLn+x9D2Ugcg/F7IS/5Ar7EcOSFez
+          #       j7q/+MZozwKBgQC77tw7LO1AhvumTmCLioE7moknvelQ3/YJXa49ddGd91vxgepG
+          #       ppiBn+xGc9D5HjeZBSTKO6UhP28AHCw2aGvdW0zJeHWy9g3lqLwZEET5XN1JFn3H
+          #       jy+rljpfOZusT/xhyCg3M4PYHjq0RSVT/+R3SnXNpfN3y+Iiy/n6l7ZzMQKBgGy6
+          #       ZHg2v73GBQxIoUrFMvT0yxz98JGf/8ildCZE01OgVj7s1NCsUxHJkn4c0tQQjjac
+          #       1Z/MP9NE16x8ff9rnahSVGlTCKN+NfR+w68WYwRd+bB0OGWAeNqNd+MdEDBXdZA4
+          #       LbxKQhRRb9/Spmn9n5N1mTdmTajlC5mtaWdG6OxNAoGBAJyxDKtYi8Xs4ZMG/jca
+          #       P+T8ibxgS/dX4fJDWdbbtt9M6TRI2+nodjIswhLjxJllN0WH2iZjx3l1e5zgcnfu
+          #       KorPYS6SYQgFCwtAXUNzZa8hFEsENIYXsNTfZnHw02nJUuBEE47wq9SvZO012SSY
+          #       bID88UHWZEzwQDAnl4jR99Hl
+          #       -----END PRIVATE KEY-----
+
+
+
+          # gm_tlcp
+          validation_context:
+            trusted_ca:
+              inline_string: |
+                -----BEGIN CERTIFICATE-----
+                MIIBlTCCATsCFC8FW89HUX7ajGUJLscMW2D46xkDMAoGCCqBHM9VAYN1ME0xCzAJ
+                BgNVBAYTAkNOMRAwDgYDVQQIDAdCZWlqaW5nMRAwDgYDVQQHDAdCZWlqaW5nMQ0w
+                CwYDVQQKDARUZXN0MQswCQYDVQQDDAJDQTAeFw0yNTEwMzAwMjQ0NDFaFw0yNjEw
+                MzAwMjQ0NDFaME0xCzAJBgNVBAYTAkNOMRAwDgYDVQQIDAdCZWlqaW5nMRAwDgYD
+                VQQHDAdCZWlqaW5nMQ0wCwYDVQQKDARUZXN0MQswCQYDVQQDDAJDQTBZMBMGByqG
+                SM49AgEGCCqBHM9VAYItA0IABADkzROy/akNkilFfZKVog/mVfS0Wj6MpUEgGTsm
+                dEbvywa17mVPOBzwLwvMCUZzuoW4kXtvmRSG4wjQ1OPy9EEwCgYIKoEcz1UBg3UD
+                SAAwRQIgJO/snkSrD8YxaJWIpxraMExFoitMt++uMk6e35l/+JsCIQCTfvsXw5h9
+                JDm89lwyvWsLna8sxPy6oxc9fqxBdFY7pQ==
+                -----END CERTIFICATE-----
+            allow_expired_certificate: true
+
+          tls_certificates:
+          - certificate_chain:
+              inline_string: |
+                gm
+                sign
+                -----BEGIN CERTIFICATE-----
+                MIIBnzCCAUWgAwIBAgIBATAKBggqgRzPVQGDdTAXMRUwEwYDVQQDDAxOVExTIFRl
+                c3QgQ0EwHhcNMjUwOTI4MDIzNjEwWhcNMzUwOTI2MDIzNjEwWjAgMR4wHAYDVQQD
+                DBVOVExTIFNlcnZlciBTaWduIENlcnQwWTATBgcqhkjOPQIBBggqgRzPVQGCLQNC
+                AAS5gdtWCTueIwjpQFNWGcIrWYDcMrxGib1DWFa/uaOf2ZQu2B+U+oikEVwDoxhQ
+                uZE1MEYccyz5MQpVitR1PrtMo3kwdzAJBgNVHRMEAjAAMAsGA1UdDwQEAwIHgDAd
+                BgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwHQYDVR0OBBYEFEbmXn1djFcJ
+                m7ebn9CAwmcoSJyyMB8GA1UdIwQYMBaAFEdN7+p7C0c3umHg8RNLJuol6htlMAoG
+                CCqBHM9VAYN1A0gAMEUCIEYODFxnYlHw95rUuYNExX2pnxTIdR76WInnfOk8TS98
+                AiEAgWi+zfr0QkACfD30HR1sLsQoVkMSzEtgDpaUeaqBUx0=
+                -----END CERTIFICATE-----
+                enc
+                -----BEGIN CERTIFICATE-----
+                MIIBnTCCAUSgAwIBAgIBAjAKBggqgRzPVQGDdTAXMRUwEwYDVQQDDAxOVExTIFRl
+                c3QgQ0EwHhcNMjUwOTI4MDIzNjEwWhcNMzUwOTI2MDIzNjEwWjAfMR0wGwYDVQQD
+                DBROVExTIFNlcnZlciBFbmMgQ2VydDBZMBMGByqGSM49AgEGCCqBHM9VAYItA0IA
+                BJNkFWHLtifRylmdJf+oO1H89+m6CbZIjnX2liHG90otpT+UjJOZqUJp7QRp7Cnm
+                U2+ujTlLABvkkR7qwtEh4PejeTB3MAkGA1UdEwQCMAAwCwYDVR0PBAQDAgUgMB0G
+                A1UdJQQWMBQGCCsGAQUFBwMBBggrBgEFBQcDAjAdBgNVHQ4EFgQU4G0bZiYBFpAN
+                JfzPYATIkgvnPcswHwYDVR0jBBgwFoAUR03v6nsLRze6YeDxE0sm6iXqG2UwCgYI
+                KoEcz1UBg3UDRwAwRAIgTAO+VwIWvbWC4lygFmzIIjFiaoqaNphuCODuNB4vN+EC
+                IG5tZvYvmK6MZ+VtuXDR5mUWLt5abNvsCnxyNNxYO/p4
+                -----END CERTIFICATE-----
+
+
+
+            private_key:
+              inline_string: |
+                gm
+                sign
+                -----BEGIN PRIVATE KEY-----
+                MIGHAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBG0wawIBAQQgR9iZw1lTP/s+Ky33
+                QmX71aQn8N6T0Q/DBAan0x65lMmhRANCAAS5gdtWCTueIwjpQFNWGcIrWYDcMrxG
+                ib1DWFa/uaOf2ZQu2B+U+oikEVwDoxhQuZE1MEYccyz5MQpVitR1PrtM
+                -----END PRIVATE KEY-----
+                enc
+                -----BEGIN PRIVATE KEY-----
+                MIGHAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBG0wawIBAQQgwnxzxIz0x9gcFCmR
+                61tyIhcQS2WW+UTbuycR8B1W9HqhRANCAASTZBVhy7Yn0cpZnSX/qDtR/Pfpugm2
+                SI519pYhxvdKLaU/lIyTmalCae0Eaewp5lNvro05SwAb5JEe6sLRIeD3
+                -----END PRIVATE KEY-----
+            # password:
+            #   inline_string: |
+            #     gm
+            #     sign
+            #     1
+            #     enc
+            #     1
+
+          # # gmtls1_3
+          # tls_certificates:
+          # - certificate_chain:
+          #     inline_string: |
+          #       -----BEGIN CERTIFICATE-----
+          #       MIIBtjCCAV0CFHRB1p+XWpjQQTE0lKk+X+BE0u0iMAoGCCqBHM9VAYN1MFwxCzAJ
+          #       BgNVBAYTAkNOMRAwDgYDVQQIDAdCZWlqaW5nMRAwDgYDVQQHDAdCZWlqaW5nMQ0w
+          #       CwYDVQQKDARUZXN0MQ0wCwYDVQQLDARUZXN0MQswCQYDVQQDDAJDQTAeFw0yNTEw
+          #       MjMxMjA3NDNaFw0zNTEwMjExMjA3NDNaMGAxCzAJBgNVBAYTAkNOMRAwDgYDVQQI
+          #       DAdCZWlqaW5nMRAwDgYDVQQHDAdCZWlqaW5nMQ0wCwYDVQQKDARUZXN0MQ0wCwYD
+          #       VQQLDARUZXN0MQ8wDQYDVQQDDAZzZXJ2ZXIwWTATBgcqhkjOPQIBBggqgRzPVQGC
+          #       LQNCAARD/PcgIFrOkIbsCAVxnLjMb/bf5uhYKWrpffBfflft63aa6tsLG0edvUwm
+          #       Kt9DmBPu3RV2o8mJRVmZeL0I0GbJMAoGCCqBHM9VAYN1A0cAMEQCIC+bdtspE4j5
+          #       0ILI6YuKpeEmroFi/jTnY6MYvuG70NHIAiAqjonUjA3745dCokf682xIc+j0BToP
+          #       mYwbuiN6o3641Q==
+          #       -----END CERTIFICATE-----
+
+          #   private_key:
+          #     inline_string: |
+          #       -----BEGIN EC PARAMETERS-----
+          #       BggqgRzPVQGCLQ==
+          #       -----END EC PARAMETERS-----
+          #       -----BEGIN PRIVATE KEY-----
+          #       MIGHAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBG0wawIBAQQgU7xkTVZcpq1PjCQW
+          #       5kpUnjn3toHSxExLnbpQbCoQ93yhRANCAARD/PcgIFrOkIbsCAVxnLjMb/bf5uhY
+          #       KWrpffBfflft63aa6tsLG0edvUwmKt9DmBPu3RV2o8mJRVmZeL0I0GbJ
+          #       -----END PRIVATE KEY-----
+
+
+    filters:
+    - name: envoy.filters.network.http_connection_manager
+      typed_config:
+        "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+        stat_prefix: ingress_http
+        access_log:
+          - name: envoy.access_loggers.stdout
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+
+        http_filters:
+        - name: envoy.filters.http.lua
+          typed_config:
+            '@type': type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
+            inline_code: |
+              function envoy_on_request(request_handle)
+                request_handle:headers():add("sr-vsmatched","false");
+              end
+
+        - name: envoy.filters.http.lua
+          typed_config:
+            '@type': type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
+            inline_code: |
+              function envoy_on_request(request_handle)
+                request_handle:headers():remove("sr-vsmatched");
+              end
+
+        - name: envoy.filters.http.router
+          typed_config:
+            '@type': type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+            suppress_envoy_headers: true
+
+        rds:
+          route_config_name: local_route
+          config_source:
+            path: /root/envoy-filters/config/resources_route.yaml

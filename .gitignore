@@ -1,0 +1,40 @@
+# 构建产物
+bazel-*/
+bazel-bin/
+bazel-out/
+bazel-testlogs/
+external/
+tools/
+third_party/
+third-party/
+envoy/
+Tongsuo/
+patches/
+docs/
+*.o
+*.so
+*.a
+*.lo
+*.la
+
+# 大文件
+*.db
+*.zip
+*.tar
+*.gz
+*.7z
+*.exe
+*.bin
+*.pdf
+*.mp4
+*.mov
+
+# 证书
+*.pem
+*.key
+*.crt
+
+# IDE
+.vscode/
+.idea/
+.DS_Store

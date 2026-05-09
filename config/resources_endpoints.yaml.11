@@ -1,0 +1,27 @@
+resources:
+- "@type": type.googleapis.com/envoy.config.endpoint.v3.ClusterLoadAssignment
+  cluster_name: service_local_test
+  endpoints:
+  - lb_endpoints:
+    - endpoint:
+        address:
+          socket_address:
+            address: 127.0.0.1
+            port_value: 8000  
+      health_status: HEALTHY
+      load_balancing_weight: 50
+    - endpoint:
+        address:
+          socket_address:
+            address: 127.0.0.1
+            port_value: 8001 
+      health_status: HEALTHY
+      load_balancing_weight: 50
+    # 可以添加更多端点
+    # - endpoint:
+    #     address:
+    #       socket_address:
+    #         address: www.zyx2.com
+    #         port_value: 8001
+    #   health_status: HEALTHY
+    #   load_balancing_weight: 100

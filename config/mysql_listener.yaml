@@ -1,0 +1,30 @@
+resources:
+- "@type": type.googleapis.com/envoy.config.listener.v3.Listener
+  name: listener_0
+    # freebind: true
+  address:
+    socket_address:
+      address: 0.0.0.0
+      port_value: 13306
+
+filter_chains:
+    - filters:
+      - name: envoy.filters.network.mysql_proxy
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.mysql_proxy.v3.MySQLProxy
+          stat_prefix: mysql_stats
+          fpe_secret: # sds密钥，具体密钥值配置在static_resources
+            name: mysql_fpe_key
+          protected_columns: # 支持配置库、表、列
+          - database: testdb #库
+            table: users # 表
+            column: name # 列
+          - database: testdb
+            table: users
+            column: email
+      - name: envoy.filters.network.tcp_proxy
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.tcp_proxy.v3.TcpProxy
+          stat_prefix: mysql_tcp
+          cluster: mysql_backend # tcp代理的上游业务，此处为mysql
+          idle_timeout: 0s

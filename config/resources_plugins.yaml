@@ -1,0 +1,18 @@
+resources:
+- "@type": type.googleapis.com/envoy.service.runtime.v3.Runtime
+  name: srhino_plugins
+  layer:
+    www.srhino.com:
+      #application-acl.so.1.1.0: {}
+      #file-watermark.so.1.0.0: {}
+      #request-pause.so.1.1.0: {}
+      #identity-verification.so.1.0.2: {}
+      #strong-stateful-session.so.1.0.0: {}
+      # cc-protection.so.1.0.0: {}
+      #global-access-list.so.1.0.0: {}
+      #user-identify.so.1.0.4: {}
+      # ratelimit.so.1.0.4: {}
+      #code_gen_template.so.1.0.0: {}
+      #ddc.so.1.0.0: {}
+      #dac.so.1.0.0: {}
+      #weakness-detect.so.1.0.0: {}

@@ -1,0 +1,5 @@
+# Example FPE config for FF3
+# For now the code reads key using simple parser; replace with secure config management for production.
+# algorithm: FF3
+key: my_secret_key_please_change
+marker: ENC

@@ -1,0 +1,309 @@
+resources:
+- '@type': type.googleapis.com/envoy.config.listener.v3.Listener
+  name: listener_0
+  address:
+    socket_address:
+      address: 0.0.0.0
+      port_value: 1000
+  filter_chains:
+  - transport_socket:
+      name: envoy.transport_sockets.tls
+      typed_config:
+        '@type': type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
+        common_tls_context:
+          alpn_protocols:
+          - h2,http/1.1
+          - http/1.1
+          tls_params:
+            tls_minimum_protocol_version: TLSv1_1
+            tls_maximum_protocol_version: TLSv1_3
+            cipher_suites:
+            - TLS_RSA_WITH_AES_128_CBC_SHA
+            - TLS_RSA_WITH_AES_256_CBC_SHA
+            - TLS_PSK_WITH_AES_128_CBC_SHA
+            - TLS_PSK_WITH_AES_256_CBC_SHA
+            - TLS_RSA_WITH_AES_128_GCM_SHA256
+            - TLS_RSA_WITH_AES_256_GCM_SHA384
+            - TLS_SM4_GCM_SM3
+            - TLS_SM4_CCM_SM3
+            ecdh_curves:
+            - X25519
+            - P-256
+          tls_certificates:
+          - certificate_chain:
+              inline_string: |
+                -----BEGIN CERTIFICATE-----
+                MIIBtjCCAV0CFHRB1p+XWpjQQTE0lKk+X+BE0u0iMAoGCCqBHM9VAYN1MFwxCzAJ
+                BgNVBAYTAkNOMRAwDgYDVQQIDAdCZWlqaW5nMRAwDgYDVQQHDAdCZWlqaW5nMQ0w
+                CwYDVQQKDARUZXN0MQ0wCwYDVQQLDARUZXN0MQswCQYDVQQDDAJDQTAeFw0yNTEw
+                MjMxMjA3NDNaFw0zNTEwMjExMjA3NDNaMGAxCzAJBgNVBAYTAkNOMRAwDgYDVQQI
+                DAdCZWlqaW5nMRAwDgYDVQQHDAdCZWlqaW5nMQ0wCwYDVQQKDARUZXN0MQ0wCwYD
+                VQQLDARUZXN0MQ8wDQYDVQQDDAZzZXJ2ZXIwWTATBgcqhkjOPQIBBggqgRzPVQGC
+                LQNCAARD/PcgIFrOkIbsCAVxnLjMb/bf5uhYKWrpffBfflft63aa6tsLG0edvUwm
+                Kt9DmBPu3RV2o8mJRVmZeL0I0GbJMAoGCCqBHM9VAYN1A0cAMEQCIC+bdtspE4j5
+                0ILI6YuKpeEmroFi/jTnY6MYvuG70NHIAiAqjonUjA3745dCokf682xIc+j0BToP
+                mYwbuiN6o3641Q==
+                -----END CERTIFICATE-----
+                
+            private_key:
+              inline_string: |
+                -----BEGIN EC PARAMETERS-----
+                BggqgRzPVQGCLQ==
+                -----END EC PARAMETERS-----
+                -----BEGIN PRIVATE KEY-----
+                MIGHAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBG0wawIBAQQgU7xkTVZcpq1PjCQW
+                5kpUnjn3toHSxExLnbpQbCoQ93yhRANCAARD/PcgIFrOkIbsCAVxnLjMb/bf5uhY
+                KWrpffBfflft63aa6tsLG0edvUwmKt9DmBPu3RV2o8mJRVmZeL0I0GbJ
+                -----END PRIVATE KEY-----
+                
+    filters:
+    - name: envoy.filters.network.http_connection_manager
+      typed_config:
+        '@type': type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+        stat_prefix: ingress_http
+        access_log:
+        - name: envoy.access_loggers.stdout
+          typed_config:
+            '@type': type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+        http_filters:
+        - name: envoy.filters.http.body-to-metadata.1.0
+          typed_config:
+            '@type': type.googleapis.com/envoy.extensions.filters.http.body_to_metadata.v3.BodyToMetadataGlobal
+            request_rule:
+              max_body_bytes: 104857600
+        - name: envoy.filters.http.lua
+          typed_config:
+            '@type': type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
+            inline_code: "function envoy_on_request(request_handle)\n  request_handle:headers():add(\"\
+              sr-vsmatched\",\"false\");\nend\n"
+        - name: envoy.extensions.common.matching.v3.ExtensionWithMatcher
+          typed_config:
+            '@type': type.googleapis.com/envoy.extensions.common.matching.v3.ExtensionWithMatcher
+            extension_config:
+              name: envoy.extensions.filters.http.composite.v3.Composite
+              typed_config:
+                '@type': type.googleapis.com/envoy.extensions.filters.http.composite.v3.Composite
+            xds_matcher:
+              matcher_list:
+                matchers:
+                - predicate:
+                    and_matcher:
+                      predicate:
+                      - single_predicate:
+                          input:
+                            name: envoy.type.matcher.v3.HttpRequestHeaderMatchInput
+                            typed_config:
+                              '@type': type.googleapis.com/envoy.type.matcher.v3.HttpRequestHeaderMatchInput
+                              header_name: sr-vsmatched
+                          value_match:
+                            prefix: 'false'
+                      - single_predicate:
+                          input:
+                            name: envoy.type.matcher.v3.HttpRequestHeaderMatchInput
+                            typed_config:
+                              '@type': type.googleapis.com/envoy.type.matcher.v3.HttpRequestHeaderMatchInput
+                              header_name: host
+                          value_match:
+                            exact: 0.0.0.0:1000
+                  on_match:
+                    action:
+                      name: envoy.extensions.filters.http.composite.v3.ExecuteFilterAction
+                      typed_config:
+                        '@type': type.googleapis.com/envoy.extensions.filters.http.composite.v3.ExecuteFilterAction
+                        typed_config:
+                          name: www.srhino.com.file-watermark.so.1.0.0.instance1
+                          typed_config:
+                            '@type': type.googleapis.com/envoy.extensions.filters.http.srhino_plugin_loader.v3.SrhinoPluginLoaderGlobal
+                            plugin_file_name: www.srhino.com.file-watermark.so.1.0.0
+                            config: null
+        - name: envoy.filters.http.lua
+          typed_config:
+            '@type': type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
+            inline_code: "function envoy_on_request(request_handle)\n  request_handle:headers():remove(\"\
+              sr-vsmatched\");\nend\n"
+        - name: envoy.filters.http.body-to-metadata.1.0
+          typed_config:
+            '@type': type.googleapis.com/envoy.extensions.filters.http.body_to_metadata.v3.BodyToMetadataGlobal
+            response_rule:
+              max_body_bytes: 104857600
+        - name: envoy.filters.http.router
+          typed_config:
+            '@type': type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+            suppress_envoy_headers: true
+        rds:
+          route_config_name: local_route
+          config_source:
+            path: /root/envoy-filters/config/resources_route.yaml
+- '@type': type.googleapis.com/envoy.config.listener.v3.Listener
+  name: listener_1
+  address:
+    socket_address:
+      address: 0.0.0.0
+      port_value: 1001
+  filter_chains:
+  - transport_socket:
+      name: envoy.transport_sockets.tls
+      typed_config:
+        '@type': type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
+        common_tls_context:
+          alpn_protocols:
+          - h2,http/1.1
+          - http/1.1
+          tls_params:
+            tls_minimum_protocol_version: TLSv1_1
+            tls_maximum_protocol_version: TLSv1_3
+            cipher_suites: [
+              "TLCP",
+              "RSA_SM4_CBC_SHA256",
+              "RSA_SM4_CBC_SM3",
+              "ECC_SM2_SM4_CBC_SM3",
+              "ECDHE_SM2_SM4_CBC_SM3",
+              "ECC_SM2_SM4_GCM_SM3",
+              "ECDHE_SM2_SM4_GCM_SM3",
+              "RSA_SM4_GCM_SHA256",
+              "RSA_SM4_GCM_SM3",
+            ]
+            ecdh_curves:
+            - X25519
+            - P-256
+          # gm_tlcp
+          validation_context:
+            trusted_ca:
+              inline_string: |
+                -----BEGIN CERTIFICATE-----
+                MIIBhDCCASmgAwIBAgIUdJWo4BZ80X8emyicUaT0TxYZVqYwCgYIKoEcz1UBg3Uw
+                FzEVMBMGA1UEAwwMTlRMUyBUZXN0IENBMB4XDTI1MDkyODAyMzYxMFoXDTM1MDky
+                NjAyMzYxMFowFzEVMBMGA1UEAwwMTlRMUyBUZXN0IENBMFkwEwYHKoZIzj0CAQYI
+                KoEcz1UBgi0DQgAEpYvkjz/1IWLjASNi+A4VFJfcXqEry+E91sGVex//s04FI047
+                IOXXo4h4zzk1T1ftl6cm1Y758seO1No7vfWzR6NTMFEwHQYDVR0OBBYEFEdN7+p7
+                C0c3umHg8RNLJuol6htlMB8GA1UdIwQYMBaAFEdN7+p7C0c3umHg8RNLJuol6htl
+                MA8GA1UdEwEB/wQFMAMBAf8wCgYIKoEcz1UBg3UDSQAwRgIhAJ+2iOJ6ViFHIWnx
+                zKQil72TfOAI7TQ6bf/d76t6v6pQAiEAmrj1UBXh+kdfd7RGmkiv8RJ1JdwbD/f7
+                VX1pS2pOE64=
+                -----END CERTIFICATE-----
+            allow_expired_certificate: true
+
+          tls_certificates:
+          - certificate_chain:
+              inline_string: |
+                gm
+                sign
+                -----BEGIN CERTIFICATE-----
+                MIIBnzCCAUWgAwIBAgIBATAKBggqgRzPVQGDdTAXMRUwEwYDVQQDDAxOVExTIFRl
+                c3QgQ0EwHhcNMjUwOTI4MDIzNjEwWhcNMzUwOTI2MDIzNjEwWjAgMR4wHAYDVQQD
+                DBVOVExTIFNlcnZlciBTaWduIENlcnQwWTATBgcqhkjOPQIBBggqgRzPVQGCLQNC
+                AAS5gdtWCTueIwjpQFNWGcIrWYDcMrxGib1DWFa/uaOf2ZQu2B+U+oikEVwDoxhQ
+                uZE1MEYccyz5MQpVitR1PrtMo3kwdzAJBgNVHRMEAjAAMAsGA1UdDwQEAwIHgDAd
+                BgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwHQYDVR0OBBYEFEbmXn1djFcJ
+                m7ebn9CAwmcoSJyyMB8GA1UdIwQYMBaAFEdN7+p7C0c3umHg8RNLJuol6htlMAoG
+                CCqBHM9VAYN1A0gAMEUCIEYODFxnYlHw95rUuYNExX2pnxTIdR76WInnfOk8TS98
+                AiEAgWi+zfr0QkACfD30HR1sLsQoVkMSzEtgDpaUeaqBUx0=
+                -----END CERTIFICATE-----
+                enc
+                -----BEGIN CERTIFICATE-----
+                MIIBnTCCAUSgAwIBAgIBAjAKBggqgRzPVQGDdTAXMRUwEwYDVQQDDAxOVExTIFRl
+                c3QgQ0EwHhcNMjUwOTI4MDIzNjEwWhcNMzUwOTI2MDIzNjEwWjAfMR0wGwYDVQQD
+                DBROVExTIFNlcnZlciBFbmMgQ2VydDBZMBMGByqGSM49AgEGCCqBHM9VAYItA0IA
+                BJNkFWHLtifRylmdJf+oO1H89+m6CbZIjnX2liHG90otpT+UjJOZqUJp7QRp7Cnm
+                U2+ujTlLABvkkR7qwtEh4PejeTB3MAkGA1UdEwQCMAAwCwYDVR0PBAQDAgUgMB0G
+                A1UdJQQWMBQGCCsGAQUFBwMBBggrBgEFBQcDAjAdBgNVHQ4EFgQU4G0bZiYBFpAN
+                JfzPYATIkgvnPcswHwYDVR0jBBgwFoAUR03v6nsLRze6YeDxE0sm6iXqG2UwCgYI
+                KoEcz1UBg3UDRwAwRAIgTAO+VwIWvbWC4lygFmzIIjFiaoqaNphuCODuNB4vN+EC
+                IG5tZvYvmK6MZ+VtuXDR5mUWLt5abNvsCnxyNNxYO/p4
+                -----END CERTIFICATE-----
+
+
+
+            private_key:
+              inline_string: |
+                gm
+                sign
+                -----BEGIN PRIVATE KEY-----
+                MIGHAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBG0wawIBAQQgR9iZw1lTP/s+Ky33
+                QmX71aQn8N6T0Q/DBAan0x65lMmhRANCAAS5gdtWCTueIwjpQFNWGcIrWYDcMrxG
+                ib1DWFa/uaOf2ZQu2B+U+oikEVwDoxhQuZE1MEYccyz5MQpVitR1PrtM
+                -----END PRIVATE KEY-----
+                enc
+                -----BEGIN PRIVATE KEY-----
+                MIGHAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBG0wawIBAQQgwnxzxIz0x9gcFCmR
+                61tyIhcQS2WW+UTbuycR8B1W9HqhRANCAASTZBVhy7Yn0cpZnSX/qDtR/Pfpugm2
+                SI519pYhxvdKLaU/lIyTmalCae0Eaewp5lNvro05SwAb5JEe6sLRIeD3
+                -----END PRIVATE KEY-----
+    filters:
+    - name: envoy.filters.network.http_connection_manager
+      typed_config:
+        '@type': type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+        stat_prefix: ingress_http
+        access_log:
+        - name: envoy.access_loggers.stdout
+          typed_config:
+            '@type': type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+        http_filters:
+        - name: envoy.filters.http.body-to-metadata.1.0
+          typed_config:
+            '@type': type.googleapis.com/envoy.extensions.filters.http.body_to_metadata.v3.BodyToMetadataGlobal
+            request_rule:
+              max_body_bytes: 104857600
+        - name: envoy.filters.http.lua
+          typed_config:
+            '@type': type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
+            inline_code: "function envoy_on_request(request_handle)\n  request_handle:headers():add(\"\
+              sr-vsmatched\",\"false\");\nend\n"
+        - name: envoy.extensions.common.matching.v3.ExtensionWithMatcher
+          typed_config:
+            '@type': type.googleapis.com/envoy.extensions.common.matching.v3.ExtensionWithMatcher
+            extension_config:
+              name: envoy.extensions.filters.http.composite.v3.Composite
+              typed_config:
+                '@type': type.googleapis.com/envoy.extensions.filters.http.composite.v3.Composite
+            xds_matcher:
+              matcher_list:
+                matchers:
+                - predicate:
+                    and_matcher:
+                      predicate:
+                      - single_predicate:
+                          input:
+                            name: envoy.type.matcher.v3.HttpRequestHeaderMatchInput
+                            typed_config:
+                              '@type': type.googleapis.com/envoy.type.matcher.v3.HttpRequestHeaderMatchInput
+                              header_name: sr-vsmatched
+                          value_match:
+                            prefix: 'false'
+                      - single_predicate:
+                          input:
+                            name: envoy.type.matcher.v3.HttpRequestHeaderMatchInput
+                            typed_config:
+                              '@type': type.googleapis.com/envoy.type.matcher.v3.HttpRequestHeaderMatchInput
+                              header_name: host
+                          value_match:
+                            exact: 0.0.0.0:1001
+                  on_match:
+                    action:
+                      name: envoy.extensions.filters.http.composite.v3.ExecuteFilterAction
+                      typed_config:
+                        '@type': type.googleapis.com/envoy.extensions.filters.http.composite.v3.ExecuteFilterAction
+                        typed_config:
+                          name: www.srhino.com.file-watermark.so.1.0.0.instance1
+                          typed_config:
+                            '@type': type.googleapis.com/envoy.extensions.filters.http.srhino_plugin_loader.v3.SrhinoPluginLoaderGlobal
+                            plugin_file_name: www.srhino.com.file-watermark.so.1.0.0
+                            config: null
+        - name: envoy.filters.http.lua
+          typed_config:
+            '@type': type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
+            inline_code: "function envoy_on_request(request_handle)\n  request_handle:headers():remove(\"\
+              sr-vsmatched\");\nend\n"
+        - name: envoy.filters.http.body-to-metadata.1.0
+          typed_config:
+            '@type': type.googleapis.com/envoy.extensions.filters.http.body_to_metadata.v3.BodyToMetadataGlobal
+            response_rule:
+              max_body_bytes: 104857600
+        - name: envoy.filters.http.router
+          typed_config:
+            '@type': type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+            suppress_envoy_headers: true
+        rds:
+          route_config_name: local_route
+          config_source:
+            path: /root/envoy-filters/config/resources_route.yaml

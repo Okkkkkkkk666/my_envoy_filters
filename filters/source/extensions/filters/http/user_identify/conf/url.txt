@@ -1,0 +1,8 @@
+.*login.*
+.*signin.*
+.*oauth/callback.*
+.*session/new.*
+.*authenticate.*
+.*sign-in.*
+.*register.*
+.*sign_in.*

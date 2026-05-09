@@ -1,0 +1,46 @@
+          tls_certificates:
+          - certificate_chain:
+              inline_string: |
+                gm
+                sign
+                -----BEGIN CERTIFICATE-----
+                MIIBnzCCAUWgAwIBAgIBATAKBggqgRzPVQGDdTAXMRUwEwYDVQQDDAxOVExTIFRl
+                c3QgQ0EwHhcNMjUwOTI4MDIzNjEwWhcNMzUwOTI2MDIzNjEwWjAgMR4wHAYDVQQD
+                DBVOVExTIFNlcnZlciBTaWduIENlcnQwWTATBgcqhkjOPQIBBggqgRzPVQGCLQNC
+                AAS5gdtWCTueIwjpQFNWGcIrWYDcMrxGib1DWFa/uaOf2ZQu2B+U+oikEVwDoxhQ
+                uZE1MEYccyz5MQpVitR1PrtMo3kwdzAJBgNVHRMEAjAAMAsGA1UdDwQEAwIHgDAd
+                BgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwHQYDVR0OBBYEFEbmXn1djFcJ
+                m7ebn9CAwmcoSJyyMB8GA1UdIwQYMBaAFEdN7+p7C0c3umHg8RNLJuol6htlMAoG
+                CCqBHM9VAYN1A0gAMEUCIEYODFxnYlHw95rUuYNExX2pnxTIdR76WInnfOk8TS98
+                AiEAgWi+zfr0QkACfD30HR1sLsQoVkMSzEtgDpaUeaqBUx0=
+                -----END CERTIFICATE-----
+                enc
+                -----BEGIN CERTIFICATE-----
+                MIIBnTCCAUSgAwIBAgIBAjAKBggqgRzPVQGDdTAXMRUwEwYDVQQDDAxOVExTIFRl
+                c3QgQ0EwHhcNMjUwOTI4MDIzNjEwWhcNMzUwOTI2MDIzNjEwWjAfMR0wGwYDVQQD
+                DBROVExTIFNlcnZlciBFbmMgQ2VydDBZMBMGByqGSM49AgEGCCqBHM9VAYItA0IA
+                BJNkFWHLtifRylmdJf+oO1H89+m6CbZIjnX2liHG90otpT+UjJOZqUJp7QRp7Cnm
+                U2+ujTlLABvkkR7qwtEh4PejeTB3MAkGA1UdEwQCMAAwCwYDVR0PBAQDAgUgMB0G
+                A1UdJQQWMBQGCCsGAQUFBwMBBggrBgEFBQcDAjAdBgNVHQ4EFgQU4G0bZiYBFpAN
+                JfzPYATIkgvnPcswHwYDVR0jBBgwFoAUR03v6nsLRze6YeDxE0sm6iXqG2UwCgYI
+                KoEcz1UBg3UDRwAwRAIgTAO+VwIWvbWC4lygFmzIIjFiaoqaNphuCODuNB4vN+EC
+                IG5tZvYvmK6MZ+VtuXDR5mUWLt5abNvsCnxyNNxYO/p4
+                -----END CERTIFICATE-----
+
+
+
+            private_key:
+              inline_string: |
+                gm
+                sign
+                -----BEGIN PRIVATE KEY-----
+                MIGHAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBG0wawIBAQQgR9iZw1lTP/s+Ky33
+                QmX71aQn8N6T0Q/DBAan0x65lMmhRANCAAS5gdtWCTueIwjpQFNWGcIrWYDcMrxG
+                ib1DWFa/uaOf2ZQu2B+U+oikEVwDoxhQuZE1MEYccyz5MQpVitR1PrtM
+                -----END PRIVATE KEY-----
+                enc
+                -----BEGIN PRIVATE KEY-----
+                MIGHAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBG0wawIBAQQgwnxzxIz0x9gcFCmR
+                61tyIhcQS2WW+UTbuycR8B1W9HqhRANCAASTZBVhy7Yn0cpZnSX/qDtR/Pfpugm2
+                SI519pYhxvdKLaU/lIyTmalCae0Eaewp5lNvro05SwAb5JEe6sLRIeD3
+                -----END PRIVATE KEY-----

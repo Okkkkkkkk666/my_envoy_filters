@@ -1,0 +1,66 @@
+resources:
+- "@type": type.googleapis.com/envoy.config.route.v3.RouteConfiguration
+  name: local_route
+  virtual_hosts:
+  - name: local_service
+    domains: 
+    ["172.28.37.223:1000","172.16.0.254:1000","127.0.0.1:1000","www.zyx.com:1000","www.zyx.com:80"]
+    # - 192.168.171.128:1000
+    # - test.zyx.cn:80
+    # - test.zyx.cn
+    routes:
+    - match:
+        prefix: "/"
+      route:
+        cluster: service_local_test
+        # regex_rewrite: 
+        #   pattern: 
+        #     regex: "^/login(\\?|$)"
+        #     google_re2: {}
+        #   substitution: "/login.json?user_name=xyz"
+        # rewrite_query: true
+      typed_per_filter_config:
+        envoy.filters.http.srhino-plugin-loader.1.0.www.srhino.com.application-acl.so.1.1.0.instance1:
+          "@type": type.googleapis.com/envoy.extensions.filters.http.srhino_plugin_loader.v3.SrhinoPluginLoaderPerRoute
+          plugin_file_name: www.srhino.com.application-acl.so.1.1.0
+          config:
+            rules:
+              - id: 1
+                deny_context: "1111123123111111111111" 
+                act: DENY
+                rule_name: "规则名称"
+                type: "text"
+                enable: true
+                match:
+                  prefix: /
+
+        # www.srhino.com.file-watermark.so.1.0.0.instance1:
+        #   "@type": type.googleapis.com/google.protobuf.Struct
+        #   value:
+        #     enable: true
+        #     rules_config:
+        #       matchers:
+        #         contains: "/"
+        #       file_type: OFFICE
+        #       file_format:
+        #         - DOCX
+        #         - PPTX
+        #         - XLSX
+        #         - PDF
+        #         - TXT
+        #         - CSV
+        #         - JSON
+        #         - XML
+        #       watermark_type: VISIBLE
+        #       custom_watermark_content: ["hello","world"]
+        #       built_watermark_content:
+        #         - IP
+        #         - TIME
+        #       layout: VERTICAL
+        #       font_color: "#969696"
+        #       transparency: 50
+        #       font_size: STANDARD
+        #       tilt_method: DOWN
+        #       density: LAX
+        #       strategy_name: "rule1"
+        #       enable: true                

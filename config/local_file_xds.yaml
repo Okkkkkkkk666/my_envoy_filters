@@ -1,0 +1,95 @@
+admin:
+  address:
+    socket_address:
+      address: 0.0.0.0
+      port_value: 9902
+node:
+  id: default~local
+  cluster: xds-cluster
+  metadata:
+    role: default~local
+dynamic_resources:
+  lds_config:
+    path: /home/hubin/workspace/envoy-filters/config/mysql_listener.yaml
+
+static_resources:
+  clusters:
+  - name: mysql_backend
+    type: STRICT_DNS
+    connect_timeout: 3s
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: mysql_backend
+      endpoints:
+        - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: 127.0.0.1
+                    port_value: 3306
+            # - endpoint:
+            #     address:
+            #       socket_address:
+            #         address: mysql-replica
+            #         port_value: 3306
+
+  - name: cluster.public_libs_service
+    type: STRICT_DNS
+    http2_protocol_options:
+      max_concurrent_streams: 100
+    # Comment out the following line to test on v6 networks
+    dns_lookup_family: V4_ONLY
+    load_assignment:
+      cluster_name: cluster.public_libs_service
+      endpoints:
+        - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: 127.0.0.1
+                    port_value: 29210
+
+  - name: cluster.central-database
+    type: STRICT_DNS
+    http2_protocol_options:
+      max_concurrent_streams: 100
+    # Comment out the following line to test on v6 networks
+    dns_lookup_family: V4_ONLY
+    load_assignment:
+      cluster_name: cluster.central-database
+      endpoints:
+        - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: 127.0.0.1
+                    port_value: 7878
+
+# 7/9 xiaoy
+layered_runtime:
+  layers:
+  #   - name: static_layer_0
+  #     static_layer:
+  #       envoy:
+  #         resource_limits:
+  #           listener:
+  #             example_listener_name:
+  #               connection_limit: 10000
+  #       # overload:
+  #       #   global_downstream_max_connections: 900000
+  #   - name: static_layer_response_flag
+  #     static_layer:
+  #       NoHealthyUpstream: "当前网页访问出错"
+
+    # - name: srhino_plugins_layer
+    #   rtds_layer:
+    #     name: srhino_plugins
+    #     rtds_config:
+    #       resource_api_version: V3
+    #       path: /root/envoy-filters/config/resources_plugins.yaml
+
+    - name: grpc_async_client_layer
+      static_layer:
+        envoy:
+          reloadable_features:
+            enable_grpc_async_client_cache: true
