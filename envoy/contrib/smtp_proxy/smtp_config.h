@@ -3,8 +3,8 @@
 #include <string>
 #include <memory>
 #include "source/extensions/filters/network/common/factory_base.h"
-#include "contrib/envoy/extensions/filters/network/smtp_proxy/smtp_proxy.pb.h"
-#include "contrib/envoy/extensions/filters/network/smtp_proxy/smtp_proxy.pb.validate.h"
+#include "contrib/envoy/extensions/filters/network/smtp_proxy/v3/smtp_proxy.pb.h"
+#include "contrib/envoy/extensions/filters/network/smtp_proxy/v3/smtp_proxy.pb.validate.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -21,8 +21,6 @@ private:
       const envoy::extensions::filters::network::smtp_proxy::v3::SmtpProxy& proto_config,
       Server::Configuration::FactoryContext&) override;
 };
-
-
 
 } // namespace SmtpProxy
 } // namespace NetworkFilters

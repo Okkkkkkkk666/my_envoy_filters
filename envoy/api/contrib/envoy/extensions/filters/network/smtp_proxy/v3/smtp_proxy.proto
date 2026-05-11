@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package envoy.extensions.filters.network.smtp_proxy.v3;
+
+import "validate/validate.proto";
+import "google/protobuf/duration.proto";
+
+message SmtpProxy {
+  // 监控指标前缀
+  string stat_prefix = 1 [(validate.rules).string = {min_len: 1}];
+
+  // SMTP 单行最大长度
+  uint32 max_line_length = 2 [(validate.rules).uint32 = {lte: 4096, gte: 512}];
+
+  // MIME 深度解析与控制配置
+  MimeParsingConfig mime_config = 3;
+
+  // 基础策略配置 (路由、拦截)
+  PolicyConfig policy = 4;
+
+  // TLS 与安全策略
+  SecurityPolicy security = 5;
+}
+
+message MimeParsingConfig {
+  // 是否在 DATA 阶段提取 payload 并在结束时进行 MIME 解析
+  bool enable_mime_parsing = 1;
+
+  // 允许缓冲的最大邮件体积（字节）。超过此大小直接 bypass MIME 解析，防止 Envoy OOM。默认 10MB
+  uint32 max_body_bytes = 2 [(validate.rules).uint32 = {lte: 104857600}]; 
+}
+
+message PolicyConfig {
+  // 拒绝的发件人黑名单
+  repeated string denied_senders = 1;
+}
+
+message SecurityPolicy {
+  enum TlsMode {
+    OPTIONAL = 0; // 允许明文
+    REQUIRED = 1; // 必须 STARTTLS，否则拒绝 MAIL FROM
+  }
+  TlsMode tls_mode = 1;
+}

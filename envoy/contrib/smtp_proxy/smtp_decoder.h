@@ -18,7 +18,8 @@ public:
   virtual void onStartTlsRequested() PURE;
   virtual void onQuitRequested() PURE;
   virtual void onResetRequested() PURE;
-  virtual void onDataChunk(uint64_t chunk_size) PURE;
+  virtual void onDataChunk(Buffer::Instance& data, uint64_t chunk_size) PURE;
+  virtual void onDataEnd() PURE;
   virtual void onProtocolError(absl::string_view error_msg) PURE;
 };
 
@@ -30,10 +31,7 @@ public:
   const SmtpSession& session() const { return session_; }
 
   void onData(const Buffer::Instance& data);
-  void switchToStreamingMode() {
-    session_.state = State::StreamingData;
-  }
-
+  void switchToStreamingMode() { session_.state = State::StreamingData; }
   void switchToCmdMode() {
     if (session_.state == State::StreamingData) {
       session_.state = State::WaitQuitOrReset;
@@ -48,6 +46,7 @@ private:
   SmtpSession session_;
   Buffer::OwnedImpl decode_buffer_;
 };
+
 } // namespace SmtpProxy
 } // namespace NetworkFilters
 } // namespace Extensions
